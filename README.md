@@ -1,4 +1,4 @@
-🟣 ASTY – Arbitrage Strategy Protocol
+🟣 ASTY – ArbStrategy
 
 🚀 The ASTY Effect  
 ASTY is not built on hype.  
