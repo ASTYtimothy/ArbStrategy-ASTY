@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ASTY Pools</title>
+
+<style>
+* { box-sizing: border-box; }
+body {
+margin: 0;
+font-family: Inter, Arial, sans-serif;
+background:
+radial-gradient(circle at top, rgba(124, 58, 237, 0.22), transparent 30%),
+radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.12), transparent 22%),
+linear-gradient(180deg, #0b1020 0%, #060914 100%);
+color: #ffffff;
+}
+
+.container {
+max-width: 1140px;
+margin: auto;
+padding: 20px;
+}
+
+.topbar {
+position: sticky;
+top: 0;
+background: rgba(8,11,23,0.8);
+backdrop-filter: blur(12px);
+border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.nav {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px 20px;
+}
+
+.brand {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.brand img {
+width: 40px;
+border-radius: 50%;
+}
+
+.nav-links {
+display: flex;
+gap: 16px;
+}
+
+.nav-links a {
+color: #d8ccff;
+text-decoration: none;
+}
+
+.page-header {
+margin-top: 30px;
+}
+
+.page-title {
+font-size: 28px;
+margin-bottom: 6px;
+}
+
+.page-sub {
+color: #c6c2d5;
+}
+
+.table-box {
+margin-top: 20px;
+background: rgba(255,255,255,0.04);
+border: 1px solid rgba(255,255,255,0.08);
+border-radius: 16px;
+padding: 10px;
+overflow-x: auto;
+}
+
+table {
+width: 100%;
+border-collapse: collapse;
+font-size: 14px;
+}
+
+th, td {
+padding: 10px;
+text-align: left;
+}
+
+thead {
+color: #aaa;
+}
+
+tbody tr {
+border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+tbody tr:hover {
+background: rgba(255,255,255,0.03);
+}
+
+.table-note {
+margin-top: 10px;
+font-size: 12px;
+color: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+<div class="nav container">
+<div class="brand">
+<img src="assets/logo.png">
+<strong>$ASTY</strong>
+</div>
+<div class="nav-links">
+<a href="https://ArbStrategy.net" target="_blank">Website</a>
+<a href="https://x.com/ArbStrategyASTY" target="_blank">X</a>
+<a href="https://t.me/ArbStrategyASTY" target="_blank">Telegram</a>
+</div>
+</div>
+</header>
+
+<main class="container">
+
+<div class="page-header">
+<h1 class="page-title">ASTY Pool Overview</h1>
+<p class="page-sub">Live ASTY pool data with estimated fees based on volume.</p>
+</div>
+
+<div class="table-box">
+<table>
+<thead>
+<tr>
+<th>Pool</th>
+<th>Fee</th>
+<th>Liquidity</th>
+<th>Fees 1h</th>
+<th>Fees 24h</th>
+<th>Volume 24h</th>
+<th>Vol/Liq</th>
+<th>Avg Trade</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="table-note">
+Estimated fees are calculated from volume × pool fee.
+</div>
+
+</main>
+
+<script>
+
+const pools = [
+{ id: "8axv2ddrg3k5n3adtw37di4ythgj3zas2tpp1f2ew5zd", label: "ASTY / GEOD" },
+{ id: "2ufiEWc5wF8gJB1a9YiPkFuLwrFn4Zgyma1kdQRakoAr", label: "ASTY / SOL" },
+{ id: "3PVPMEseLJxE6yyB5eBJ3qzRCzCGN6L9qa85stcZH4FM", label: "ASTY / SOL" }
+];
+
+const FEE = 0.01;
+
+function format(num) {
+if (!num) return "-";
+if (num >= 1e6) return "$" + (num/1e6).toFixed(1)+"M";
+if (num >= 1e3) return "$" + (num/1e3).toFixed(1)+"K";
+return "$" + num.toFixed(2);
+}
+
+async function load() {
+for (const pool of pools) {
+try {
+const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${pool.id}`);
+const data = await res.json();
+const p = data.pairs[0];
+
+const volume24 = p.volume.h24 || 0;
+const volume1h = p.volume.h1 || 0;
+const liquidity = p.liquidity.usd || 0;
+const txns24 = p.txns.h24 || 0;
+
+const fees24 = volume24 * FEE;
+const fees1h = volume1h * FEE;
+
+const volLiq = liquidity ? (volume24 / liquidity).toFixed(2) : "-";
+const avgTrade = txns24 ? (volume24 / txns24) : 0;
+
+const row = `
+<tr>
+<td>${pool.label}</td>
+<td>1%</td>
+<td>${format(liquidity)}</td>
+<td>${format(fees1h)}</td>
+<td>${format(fees24)}</td>
+<td>${format(volume24)}</td>
+<td>${volLiq}</td>
+<td>${format(avgTrade)}</td>
+<td><a href="https://dexscreener.com/solana/${pool.id}" target="_blank">↗</a></td>
+</tr>
+`;
+
+document.getElementById("tableBody").innerHTML += row;
+
+} catch(e) {
+console.log("error", pool.id);
+}
+}
+}
+
+load();
+
+</script>
+
+</body>
+</html>
