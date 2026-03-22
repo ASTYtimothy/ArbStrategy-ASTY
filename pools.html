@@ -470,11 +470,11 @@ async function load() {
   const geckoMap = new Map();
   for (const item of flatPools) {
     const address = item?.attributes?.address;
-    if (address) geckoMap.set(address.toLowerCase(), item);
+    if (address) geckoMap.set(address, item);
   }
 
   const rows = pools.map(([id, label, feePercent]) => {
-    const item = geckoMap.get(id.toLowerCase());
+    const item = geckoMap.get(id);
     if (!item) return null;
 
     const attrs = item.attributes || {};
