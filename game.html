@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTY Simulator</title>
+  <style>
+    :root {
+      --bg: #09070f;
+      --bg-soft: #120d1d;
+      --panel: rgba(20, 14, 34, 0.92);
+      --panel-2: rgba(28, 20, 46, 0.92);
+      --border: rgba(176, 118, 255, 0.18);
+      --text: #f4efff;
+      --muted: #b9a9d6;
+      --purple: #a855f7;
+      --purple-2: #c084fc;
+      --purple-3: #7e22ce;
+      --green: #22c55e;
+      --yellow: #facc15;
+      --red: #ef4444;
+      --cyan: #22d3ee;
+      --shadow: 0 0 30px rgba(168, 85, 247, 0.18);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --transition: 180ms ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background:
+        radial-gradient(circle at top, rgba(120, 40, 220, 0.22), transparent 35%),
+        radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.08), transparent 25%),
+        linear-gradient(180deg, #07060c 0%, #0b0812 100%);
+      color: var(--text);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, rgba(34, 23, 56, 0.95), rgba(16, 11, 27, 0.95));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      right: -60px;
+      top: -60px;
+      background: radial-gradient(circle, rgba(192, 132, 252, 0.22), transparent 65%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(192, 132, 252, 0.25);
+      border-radius: 999px;
+      color: var(--purple-2);
+      background: rgba(168, 85, 247, 0.08);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 54px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      max-width: 850px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+      margin: 14px 0 0;
+    }
+
+    .hero-note {
+      margin-top: 14px;
+      color: #d8c8f3;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      transition: transform var(--transition), opacity var(--transition), background var(--transition), box-shadow var(--transition);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--purple-3));
+      color: white;
+      padding: 14px 18px;
+      border-radius: 14px;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.28);
+    }
+
+    .btn-secondary {
+      background: rgba(168, 85, 247, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 14px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      min-height: 96px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: clamp(20px, 2.4vw, 28px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .panel p.lead {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .pool-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .pool-card {
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .pool-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .pool-title {
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pool-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    .pool-meta {
+      text-align: right;
+      min-width: 130px;
+    }
+
+    .pool-percent {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .pool-amount {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pool-input-row {
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .percent-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .percent-input-wrap input {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .allocation-summary {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(168, 85, 247, 0.07);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .allocation-total {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .allocation-warning {
+      color: #ffd7d7;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .right-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .action-buttons button {
+      padding: 14px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .mini-card .k {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .mini-card .v {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .event-banner {
+      margin-top: 16px;
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.13), rgba(126, 34, 206, 0.1));
+      border: 1px solid rgba(192, 132, 252, 0.2);
+    }
+
+    .event-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: var(--purple-2);
+    }
+
+    .event-effect {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .best-run-box {
+      margin-top: 18px;
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.11), rgba(168, 85, 247, 0.04));
+      border: 1px solid rgba(192, 132, 252, 0.18);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .best-run-box h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .best-run-list {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .best-run-list strong {
+      color: var(--text);
+    }
+
+    .copy-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .copy-row button {
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 3, 8, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+      backdrop-filter: blur(6px);
+    }
+
+    .modal {
+      width: min(700px, 100%);
+      background: linear-gradient(180deg, rgba(24, 16, 40, 0.98), rgba(12, 9, 22, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 0 35px rgba(168, 85, 247, 0.25);
+    }
+
+    .modal h3 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-summary {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .final-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .final-card .label {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .final-card .value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 14px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
+
+    .status-elite {
+      color: #e8d3ff;
+      background: rgba(168, 85, 247, 0.18);
+      border: 1px solid rgba(192, 132, 252, 0.25);
+    }
+
+    .status-high {
+      color: #e9ddff;
+      background: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .status-balanced {
+      color: #f4efff;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .status-inefficient {
+      color: #ffd4d4;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.18);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .green { color: var(--green); }
+    .yellow { color: var(--yellow); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple-2); }
+
+    @media (max-width: 1080px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .progress-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 14px;
+      }
+
+      .hero, .panel {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .progress-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mini-grid,
+      .final-grid,
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .pool-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .pool-meta {
+        text-align: left;
+        min-width: auto;
+      }
+
+      .pool-input-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="badge">🟣 ASTY Simulator • GitHub Ready • No Backend</div>
+      <h1>Build your own ASTY system.</h1>
+      <p class="subtitle">
+        Start with USDT, allocate capital across pool types, run 10 cycles, and optimize for burn, growth, treasury, and efficiency.
+      </p>
+      <div class="hero-note">
+        Simulation only. Inspired by the ASTY system logic with 1% fee and 40 / 40 / 20 allocation.
+      </div>
+      <div class="hero-actions">
+        <button class="btn-primary" id="startRunBtn">🟣 Start Run</button>
+        <button class="btn-secondary" id="howItWorksBtn">How it works</button>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Starting Capital</div>
+        <div class="stat-value" id="statStartingCapital">1,000.00 USDT</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">System Value</div>
+        <div class="stat-value" id="statSystemValue">1,000.00 USDT</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Simulated Burn</div>
+        <div class="stat-value" id="statBurn">0.00 ASTY</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Treasury</div>
+        <div class="stat-value" id="statTreasury">0.00 USDT</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Growth Added</div>
+        <div class="stat-value" id="statGrowth">0.00 ASTY</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Efficiency</div>
+        <div class="stat-value" id="statEfficiency">50</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cycle</div>
+        <div class="stat-value" id="statCycle">0 / 10</div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>Allocate your capital</h2>
+        <p class="lead">
+          Split your current system across three pool styles. Higher risk can increase activity and upside, but weak cycles can drag down efficiency.
+        </p>
+
+        <div class="pool-grid">
+          <div class="pool-card">
+            <div class="pool-top">
+              <div>
+                <div class="pool-title green">🟢 Stable Pool</div>
+                <div class="pool-desc">
+                  Lower variance, more consistent cycles, weaker upside.
+                </div>
+              </div>
+              <div class="pool-meta">
+                <div class="pool-percent" id="stablePercent">40%</div>
+                <div class="pool-amount" id="stableAmount">400.00 USDT</div>
+              </div>
+            </div>
+            <div class="pool-input-row">
+              <input type="range" id="stableSlider" min="0" max="100" step="1" value="40" />
+              <div class="percent-input-wrap">
+                <input type="number" id="stableInput" min="0" max="100" step="1" value="40" />
+                <span>%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pool-card">
+            <div class="pool-top">
+              <div>
+                <div class="pool-title yellow">🟡 Balanced Pool</div>
+                <div class="pool-desc">
+                  Middle ground between consistency and upside.
+                </div>
+              </div>
+              <div class="pool-meta">
+                <div class="pool-percent" id="balancedPercent">35%</div>
+                <div class="pool-amount" id="balancedAmount">350.00 USDT</div>
+              </div>
+            </div>
+            <div class="pool-input-row">
+              <input type="range" id="balancedSlider" min="0" max="100" step="1" value="35" />
+              <div class="percent-input-wrap">
+                <input type="number" id="balancedInput" min="0" max="100" step="1" value="35" />
+                <span>%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pool-card">
+            <div class="pool-top">
+              <div>
+                <div class="pool-title red">🔴 Risk Pool</div>
+                <div class="pool-desc">
+                  Highest volatility, strongest potential upside, biggest danger.
+                </div>
+              </div>
+              <div class="pool-meta">
+                <div class="pool-percent" id="riskPercent">25%</div>
+                <div class="pool-amount" id="riskAmount">250.00 USDT</div>
+              </div>
+            </div>
+            <div class="pool-input-row">
+              <input type="range" id="riskSlider" min="0" max="100" step="1" value="25" />
+              <div class="percent-input-wrap">
+                <input type="number" id="riskInput" min="0" max="100" step="1" value="25" />
+                <span>%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="allocation-summary">
+          <div class="allocation-total" id="allocationTotal">Total Allocated: 100%</div>
+          <div class="allocation-warning" id="allocationWarning">
+            Allocation must equal exactly 100% before you can run the next cycle.
+          </div>
+        </div>
+      </div>
+
+      <div class="right-stack">
+        <div class="panel">
+          <h2>Run the system</h2>
+          <p class="lead">
+            Each cycle simulates pool performance, activity, fee generation, and ASTY-style distribution into burn, growth, and treasury.
+          </p>
+
+          <div class="action-buttons">
+            <button class="btn-primary" id="runCycleBtn">Run Cycle</button>
+            <button class="btn-secondary" id="resetAllocationBtn">Reset Allocation</button>
+            <button class="btn-secondary" id="newRunBtn">New Run</button>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="k">Last Cycle Return</div>
+              <div class="v" id="lastCycleReturn">0.00%</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Simulated Activity</div>
+              <div class="v" id="lastActivity">0.00</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Fee Generated</div>
+              <div class="v" id="lastFee">0.00</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Efficiency Delta</div>
+              <div class="v" id="lastEfficiencyDelta">0</div>
+            </div>
+          </div>
+
+          <div class="event-banner">
+            <div class="event-title" id="lastEventTitle">System ready</div>
+            <div class="event-effect" id="lastEventEffect">Waiting for first cycle.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Last cycle breakdown</h2>
+          <p class="lead">
+            Immediate feedback is what makes the loop addictive. Tweak, run, compare, repeat.
+          </p>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <div class="k">Burn Added</div>
+              <div class="v" id="lastBurn">0.00 ASTY</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Growth Added</div>
+              <div class="v" id="lastGrowth">0.00 ASTY</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Treasury Added</div>
+              <div class="v" id="lastTreasury">0.00 USDT</div>
+            </div>
+            <div class="mini-card">
+              <div class="k">Cycle Performance</div>
+              <div class="v" id="lastPerformance">Neutral</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 18px;">
+      <h2>Best run and progress</h2>
+      <p class="lead">
+        No global leaderboard needed. Beat your own best machine locally in the browser.
+      </p>
+
+      <div class="progress-grid">
+        <div class="mini-card">
+          <div class="k">Best System Value</div>
+          <div class="v" id="bestSystemValue">0.00</div>
+        </div>
+        <div class="mini-card">
+          <div class="k">Best Burn</div>
+          <div class="v" id="bestBurn">0.00</div>
+        </div>
+        <div class="mini-card">
+          <div class="k">Best Treasury</div>
+          <div class="v" id="bestTreasury">0.00</div>
+        </div>
+        <div class="mini-card">
+          <div class="k">Best Efficiency</div>
+          <div class="v" id="bestEfficiency">0</div>
+        </div>
+      </div>
+
+      <div class="best-run-box">
+        <h3>Saved best setup</h3>
+        <div class="best-run-list">
+          <div>Stable: <strong id="bestStable">0%</strong></div>
+          <div>Balanced: <strong id="bestBalanced">0%</strong></div>
+          <div>Risk: <strong id="bestRisk">0%</strong></div>
+        </div>
+
+        <div class="copy-row">
+          <button class="btn-primary" id="copyResultBtn">Copy Result</button>
+          <button class="btn-secondary" id="clearBestBtn">Clear Best Run</button>
+        </div>
+
+        <div class="footer-note">
+          Result text is copied directly to your clipboard. Best run is stored in your browser with localStorage.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="finalModalBackdrop">
+    <div class="modal">
+      <div class="badge">🟣 Run Complete</div>
+      <h3 id="finalTitle">ASTY Run Complete</h3>
+      <div class="status-pill status-balanced" id="finalStatusPill">Balanced ASTY Build</div>
+      <div class="modal-summary" id="finalSummary">
+        Your machine has completed all 10 cycles.
+      </div>
+
+      <div class="final-grid">
+        <div class="final-card">
+          <div class="label">Final System Value</div>
+          <div class="value" id="finalSystemValue">0.00 USDT</div>
+        </div>
+        <div class="final-card">
+          <div class="label">Simulated Burn</div>
+          <div class="value" id="finalBurn">0.00 ASTY</div>
+        </div>
+        <div class="final-card">
+          <div class="label">Treasury Built</div>
+          <div class="value" id="finalTreasury">0.00 USDT</div>
+        </div>
+        <div class="final-card">
+          <div class="label">Best Efficiency</div>
+          <div class="value" id="finalEfficiency">0</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="copyFinalBtn">Copy Result</button>
+        <button class="btn-secondary" id="playAgainBtn">Play Again</button>
+        <button class="btn-secondary" id="closeModalBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAME_CONFIG = {
+      startCapital: 1000,
+      maxCycles: 10,
+      feeRate: 0.01,
+      burnShare: 0.40,
+      growthShare: 0.40,
+      treasuryShare: 0.20,
+      eventChance: 0.35,
+      pools: {
+        stable: { min: 0.01, max: 0.04, activityMultiplier: 0.8 },
+        balanced: { min: -0.02, max: 0.07, activityMultiplier: 1.0 },
+        risk: { min: -0.08, max: 0.14, activityMultiplier: 1.3 }
+      }
+    };
+
+    const EVENTS = [
+      {
+        title: "Arbitrage Spike",
+        effect: "Fee output boosted by 50%.",
+        feeMultiplier: 1.5,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1
+      },
+      {
+        title: "High Volume Burst",
+        effect: "Activity multiplier increased for this cycle.",
+        feeMultiplier: 1,
+        activityBonus: 0.15,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1
+      },
+      {
+        title: "Efficient Routing",
+        effect: "Balanced pool gains an extra 2% this cycle.",
+        feeMultiplier: 1,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0.02,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1
+      },
+      {
+        title: "Treasury Shield",
+        effect: "Treasury allocation increased by 20% for this cycle.",
+        feeMultiplier: 1,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1.2
+      },
+      {
+        title: "Slippage Pressure",
+        effect: "Risk pool loses an extra 4% this cycle.",
+        feeMultiplier: 1,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: -0.04,
+        treasuryBonusMultiplier: 1
+      },
+      {
+        title: "Weak Volume Cycle",
+        effect: "Fee output reduced by 25%.",
+        feeMultiplier: 0.75,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1
+      },
+      {
+        title: "Stable Market",
+        effect: "No major deviations this cycle.",
+        feeMultiplier: 1,
+        activityBonus: 0,
+        stableBonus: 0,
+        balancedBonus: 0,
+        riskBonus: 0,
+        treasuryBonusMultiplier: 1
+      }
+    ];
+
+    const gameState = {
+      runActive: false,
+      cycle: 0,
+      maxCycles: GAME_CONFIG.maxCycles,
+      startingCapital: GAME_CONFIG.startCapital,
+      systemValue: GAME_CONFIG.startCapital,
+      totalBurn: 0,
+      totalGrowth: 0,
+      totalTreasury: 0,
+      efficiencyScore: 50,
+      bestEfficiency: 50,
+      allocation: {
+        stable: 40,
+        balanced: 35,
+        risk: 25
+      },
+      lastCycle: {
+        stablePercent: 0,
+        balancedPercent: 0,
+        riskPercent: 0,
+        cycleReturnPercent: 0,
+        simulatedActivity: 0,
+        feeGenerated: 0,
+        burnAdded: 0,
+        growthAdded: 0,
+        treasuryAdded: 0,
+        efficiencyDelta: 0,
+        eventTitle: "System ready",
+        eventEffect: "Waiting for first cycle."
+      },
+      history: []
+    };
+
+    const bestRunData = {
+      bestSystemValue: 0,
+      bestBurn: 0,
+      bestTreasury: 0,
+      bestEfficiency: 0,
+      bestAllocation: {
+        stable: 0,
+        balanced: 0,
+        risk: 0
+      },
+      lastResultText: ""
+    };
+
+    const el = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      cacheElements();
+      loadBestRun();
+      initializeGame();
+      bindUI();
+      renderAll();
+    });
+
+    function cacheElements() {
+      el.startRunBtn = document.getElementById("startRunBtn");
+      el.howItWorksBtn = document.getElementById("howItWorksBtn");
+      el.runCycleBtn = document.getElementById("runCycleBtn");
+      el.resetAllocationBtn = document.getElementById("resetAllocationBtn");
+      el.newRunBtn = document.getElementById("newRunBtn");
+      el.copyResultBtn = document.getElementById("copyResultBtn");
+      el.clearBestBtn = document.getElementById("clearBestBtn");
+
+      el.stableSlider = document.getElementById("stableSlider");
+      el.balancedSlider = document.getElementById("balancedSlider");
+      el.riskSlider = document.getElementById("riskSlider");
+
+      el.stableInput = document.getElementById("stableInput");
+      el.balancedInput = document.getElementById("balancedInput");
+      el.riskInput = document.getElementById("riskInput");
+
+      el.stablePercent = document.getElementById("stablePercent");
+      el.balancedPercent = document.getElementById("balancedPercent");
+      el.riskPercent = document.getElementById("riskPercent");
+
+      el.stableAmount = document.getElementById("stableAmount");
+      el.balancedAmount = document.getElementById("balancedAmount");
+      el.riskAmount = document.getElementById("riskAmount");
+
+      el.allocationTotal = document.getElementById("allocationTotal");
+      el.allocationWarning = document.getElementById("allocationWarning");
+
+      el.statStartingCapital = document.getElementById("statStartingCapital");
+      el.statSystemValue = document.getElementById("statSystemValue");
+      el.statBurn = document.getElementById("statBurn");
+      el.statTreasury = document.getElementById("statTreasury");
+      el.statGrowth = document.getElementById("statGrowth");
+      el.statEfficiency = document.getElementById("statEfficiency");
+      el.statCycle = document.getElementById("statCycle");
+
+      el.lastCycleReturn = document.getElementById("lastCycleReturn");
+      el.lastActivity = document.getElementById("lastActivity");
+      el.lastFee = document.getElementById("lastFee");
+      el.lastEfficiencyDelta = document.getElementById("lastEfficiencyDelta");
+      el.lastEventTitle = document.getElementById("lastEventTitle");
+      el.lastEventEffect = document.getElementById("lastEventEffect");
+      el.lastBurn = document.getElementById("lastBurn");
+      el.lastGrowth = document.getElementById("lastGrowth");
+      el.lastTreasury = document.getElementById("lastTreasury");
+      el.lastPerformance = document.getElementById("lastPerformance");
+
+      el.bestSystemValue = document.getElementById("bestSystemValue");
+      el.bestBurn = document.getElementById("bestBurn");
+      el.bestTreasury = document.getElementById("bestTreasury");
+      el.bestEfficiency = document.getElementById("bestEfficiency");
+      el.bestStable = document.getElementById("bestStable");
+      el.bestBalanced = document.getElementById("bestBalanced");
+      el.bestRisk = document.getElementById("bestRisk");
+
+      el.finalModalBackdrop = document.getElementById("finalModalBackdrop");
+      el.finalTitle = document.getElementById("finalTitle");
+      el.finalStatusPill = document.getElementById("finalStatusPill");
+      el.finalSummary = document.getElementById("finalSummary");
+      el.finalSystemValue = document.getElementById("finalSystemValue");
+      el.finalBurn = document.getElementById("finalBurn");
+      el.finalTreasury = document.getElementById("finalTreasury");
+      el.finalEfficiency = document.getElementById("finalEfficiency");
+      el.copyFinalBtn = document.getElementById("copyFinalBtn");
+      el.playAgainBtn = document.getElementById("playAgainBtn");
+      el.closeModalBtn = document.getElementById("closeModalBtn");
+    }
+
+    function initializeGame() {
+      gameState.runActive = true;
+      gameState.cycle = 0;
+      gameState.startingCapital = GAME_CONFIG.startCapital;
+      gameState.systemValue = GAME_CONFIG.startCapital;
+      gameState.totalBurn = 0;
+      gameState.totalGrowth = 0;
+      gameState.totalTreasury = 0;
+      gameState.efficiencyScore = 50;
+      gameState.bestEfficiency = 50;
+      gameState.allocation = { stable: 40, balanced: 35, risk: 25 };
+      gameState.history = [];
+      gameState.lastCycle = {
+        stablePercent: 0,
+        balancedPercent: 0,
+        riskPercent: 0,
+        cycleReturnPercent: 0,
+        simulatedActivity: 0,
+        feeGenerated: 0,
+        burnAdded: 0,
+        growthAdded: 0,
+        treasuryAdded: 0,
+        efficiencyDelta: 0,
+        eventTitle: "System ready",
+        eventEffect: "Waiting for first cycle."
+      };
+      syncAllocationInputs();
+      closeFinalModal();
+    }
+
+    function bindUI() {
+      el.startRunBtn.addEventListener("click", () => {
+        initializeGame();
+        renderAll();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      el.howItWorksBtn.addEventListener("click", () => {
+        alert(
+          "How it works:\\n\\n" +
+          "1. Start with 1,000 USDT\\n" +
+          "2. Allocate capital across Stable, Balanced, and Risk pools\\n" +
+          "3. Run 10 cycles\\n" +
+          "4. Each cycle simulates performance, activity, 1% fee generation, and ASTY-style split\\n" +
+          "5. Fees are allocated into 40% burn, 40% growth, and 20% treasury\\n" +
+          "6. Try to maximize system value and efficiency"
+        );
+      });
+
+      bindAllocationPair(el.stableSlider, el.stableInput, "stable");
+      bindAllocationPair(el.balancedSlider, el.balancedInput, "balanced");
+      bindAllocationPair(el.riskSlider, el.riskInput, "risk");
+
+      el.runCycleBtn.addEventListener("click", runCycle);
+      el.resetAllocationBtn.addEventListener("click", () => {
+        gameState.allocation = { stable: 40, balanced: 35, risk: 25 };
+        syncAllocationInputs();
+        renderAll();
+      });
+      el.newRunBtn.addEventListener("click", () => {
+        initializeGame();
+        renderAll();
+      });
+
+      el.copyResultBtn.addEventListener("click", async () => {
+        await copyText(buildResultText());
+        el.copyResultBtn.textContent = "Copied";
+        setTimeout(() => {
+          el.copyResultBtn.textContent = "Copy Result";
+        }, 1200);
+      });
+
+      el.copyFinalBtn.addEventListener("click", async () => {
+        await copyText(buildResultText());
+        el.copyFinalBtn.textContent = "Copied";
+        setTimeout(() => {
+          el.copyFinalBtn.textContent = "Copy Result";
+        }, 1200);
+      });
+
+      el.clearBestBtn.addEventListener("click", () => {
+        localStorage.removeItem("astyBestRun");
+        bestRunData.bestSystemValue = 0;
+        bestRunData.bestBurn = 0;
+        bestRunData.bestTreasury = 0;
+        bestRunData.bestEfficiency = 0;
+        bestRunData.bestAllocation = { stable: 0, balanced: 0, risk: 0 };
+        bestRunData.lastResultText = "";
+        renderBestRun();
+      });
+
+      el.playAgainBtn.addEventListener("click", () => {
+        initializeGame();
+        renderAll();
+      });
+
+      el.closeModalBtn.addEventListener("click", closeFinalModal);
+      el.finalModalBackdrop.addEventListener("click", (e) => {
+        if (e.target === el.finalModalBackdrop) {
+          closeFinalModal();
+        }
+      });
+    }
+
+    function bindAllocationPair(slider, input, key) {
+      slider.addEventListener("input", () => {
+        updateAllocation(key, slider.value);
+      });
+
+      input.addEventListener("input", () => {
+        updateAllocation(key, input.value);
+      });
+
+      input.addEventListener("blur", () => {
+        const v = clampInteger(input.value);
+        updateAllocation(key, v);
+      });
+    }
+
+    function updateAllocation(key, rawValue) {
+      const value = clampInteger(rawValue);
+      gameState.allocation[key] = value;
+      syncAllocationInputs();
+      renderAllocation();
+      renderButtons();
+    }
+
+    function syncAllocationInputs() {
+      el.stableSlider.value = gameState.allocation.stable;
+      el.balancedSlider.value = gameState.allocation.balanced;
+      el.riskSlider.value = gameState.allocation.risk;
+
+      el.stableInput.value = gameState.allocation.stable;
+      el.balancedInput.value = gameState.allocation.balanced;
+      el.riskInput.value = gameState.allocation.risk;
+    }
+
+    function validateAllocation() {
+      const total = gameState.allocation.stable + gameState.allocation.balanced + gameState.allocation.risk;
+      const valid = total === 100;
+      return { total, valid };
+    }
+
+    function runCycle() {
+      const allocationCheck = validateAllocation();
+      if (!allocationCheck.valid) {
+        renderButtons();
+        return;
+      }
+
+      if (!gameState.runActive || gameState.cycle >= gameState.maxCycles) {
+        return;
+      }
+
+      gameState.cycle += 1;
+
+      const event = rollEvent();
+      const poolResult = calculatePoolResults(event);
+      const activityMultiplier = calculateActivityMultiplier() + (event.activityBonus || 0);
+      const feesResult = calculateFees(poolResult.totalIntermediateValue, activityMultiplier, event);
+      const splitResult = splitFee(feesResult.feeGenerated, event);
+
+      const cycleReturnPercent =
+        ((poolResult.totalIntermediateValue - gameState.systemValue) / gameState.systemValue) * 100;
+
+      updateSystemValues(poolResult.totalIntermediateValue, splitResult);
+      const efficiencyDelta = updateEfficiency(cycleReturnPercent, activityMultiplier);
+
+      gameState.lastCycle = {
+        stablePercent: poolResult.stablePercent * 100,
+        balancedPercent: poolResult.balancedPercent * 100,
+        riskPercent: poolResult.riskPercent * 100,
+        cycleReturnPercent,
+        simulatedActivity: feesResult.simulatedActivity,
+        feeGenerated: feesResult.feeGenerated,
+        burnAdded: splitResult.burnAdded,
+        growthAdded: splitResult.growthAdded,
+        treasuryAdded: splitResult.treasuryAdded,
+        efficiencyDelta,
+        eventTitle: event.title,
+        eventEffect: event.effect
+      };
+
+      saveCycleToHistory();
+
+      if (gameState.cycle >= gameState.maxCycles) {
+        gameState.runActive = false;
+        saveBestRun();
+        renderAll();
+        openFinalModal();
+        return;
+      }
+
+      renderAll();
+    }
+
+    function rollEvent() {
+      const triggered = Math.random() < GAME_CONFIG.eventChance;
+      if (!triggered) {
+        return {
+          title: "Normal Conditions",
+          effect: "No major deviations this cycle.",
+          feeMultiplier: 1,
+          activityBonus: 0,
+          stableBonus: 0,
+          balancedBonus: 0,
+          riskBonus: 0,
+          treasuryBonusMultiplier: 1
+        };
+      }
+      return { ...EVENTS[Math.floor(Math.random() * EVENTS.length)] };
+    }
+
+    function calculatePoolResults(event) {
+      const stableBase = getRandomInRange(GAME_CONFIG.pools.stable.min, GAME_CONFIG.pools.stable.max);
+      const balancedBase = getRandomInRange(GAME_CONFIG.pools.balanced.min, GAME_CONFIG.pools.balanced.max);
+      const riskBase = getRandomInRange(GAME_CONFIG.pools.risk.min, GAME_CONFIG.pools.risk.max);
+
+      const stablePercent = stableBase + (event.stableBonus || 0);
+      const balancedPercent = balancedBase + (event.balancedBonus || 0);
+      const riskPercent = riskBase + (event.riskBonus || 0);
+
+      const stableCapital = gameState.systemValue * (gameState.allocation.stable / 100);
+      const balancedCapital = gameState.systemValue * (gameState.allocation.balanced / 100);
+      const riskCapital = gameState.systemValue * (gameState.allocation.risk / 100);
+
+      const stableValue = stableCapital * (1 + stablePercent);
+      const balancedValue = balancedCapital * (1 + balancedPercent);
+      const riskValue = riskCapital * (1 + riskPercent);
+
+      return {
+        stablePercent,
+        balancedPercent,
+        riskPercent,
+        stableValue,
+        balancedValue,
+        riskValue,
+        totalIntermediateValue: stableValue + balancedValue + riskValue
+      };
+    }
+
+    function calculateActivityMultiplier() {
+      const { stable, balanced, risk } = gameState.allocation;
+      return (
+        (stable / 100) * GAME_CONFIG.pools.stable.activityMultiplier +
+        (balanced / 100) * GAME_CONFIG.pools.balanced.activityMultiplier +
+        (risk / 100) * GAME_CONFIG.pools.risk.activityMultiplier
+      );
+    }
+
+    function calculateFees(intermediateValue, activityMultiplier, event) {
+      const simulatedActivity = intermediateValue * activityMultiplier;
+      const feeGenerated = simulatedActivity * GAME_CONFIG.feeRate * (event.feeMultiplier || 1);
+      return { simulatedActivity, feeGenerated };
+    }
+
+    function splitFee(feeGenerated, event) {
+      const burnAdded = feeGenerated * GAME_CONFIG.burnShare;
+      const growthAdded = feeGenerated * GAME_CONFIG.growthShare;
+      let treasuryAdded = feeGenerated * GAME_CONFIG.treasuryShare;
+
+      if (event.treasuryBonusMultiplier && event.treasuryBonusMultiplier !== 1) {
+        treasuryAdded *= event.treasuryBonusMultiplier;
+      }
+
+      return { burnAdded, growthAdded, treasuryAdded };
+    }
+
+    function updateSystemValues(intermediateValue, splitResult) {
+      gameState.systemValue = intermediateValue + splitResult.growthAdded;
+      gameState.totalBurn += splitResult.burnAdded;
+      gameState.totalGrowth += splitResult.growthAdded;
+      gameState.totalTreasury += splitResult.treasuryAdded;
+    }
+
+    function updateEfficiency(cycleReturnPercent, activityMultiplier) {
+      let delta = 0;
+      const risk = gameState.allocation.risk;
+
+      if (cycleReturnPercent > 5) delta += 8;
+      else if (cycleReturnPercent > 2) delta += 5;
+      else if (cycleReturnPercent > 0) delta += 2;
+      else if (cycleReturnPercent < -4) delta -= 10;
+      else if (cycleReturnPercent < 0) delta -= 5;
+
+      if (risk <= 25) delta += 4;
+      else if (risk <= 40) delta += 1;
+      else delta -= 5;
+
+      if (activityMultiplier > 1.05) delta += 4;
+      else if (activityMultiplier >= 0.95) delta += 2;
+
+      gameState.efficiencyScore = Math.max(0, Math.min(100, gameState.efficiencyScore + delta));
+      gameState.bestEfficiency = Math.max(gameState.bestEfficiency, gameState.efficiencyScore);
+
+      return delta;
+    }
+
+    function saveCycleToHistory() {
+      gameState.history.push({
+        cycle: gameState.cycle,
+        systemValue: gameState.systemValue,
+        burn: gameState.totalBurn,
+        treasury: gameState.totalTreasury,
+        growth: gameState.totalGrowth,
+        efficiency: gameState.efficiencyScore,
+        eventTitle: gameState.lastCycle.eventTitle
+      });
+    }
+
+    function renderAll() {
+      renderStats();
+      renderAllocation();
+      renderLastCycle();
+      renderBestRun();
+      renderButtons();
+    }
+
+    function renderStats() {
+      el.statStartingCapital.textContent = formatCurrency(gameState.startingCapital);
+      el.statSystemValue.textContent = formatCurrency(gameState.systemValue);
+      el.statBurn.textContent = `${formatNumber(gameState.totalBurn)} ASTY`;
+      el.statTreasury.textContent = formatCurrency(gameState.totalTreasury);
+      el.statGrowth.textContent = `${formatNumber(gameState.totalGrowth)} ASTY`;
+      el.statEfficiency.textContent = Math.round(gameState.efficiencyScore);
+      el.statCycle.textContent = `${gameState.cycle} / ${gameState.maxCycles}`;
+    }
+
+    function renderAllocation() {
+      const totalCheck = validateAllocation();
+      const currentValue = gameState.systemValue;
+
+      el.stablePercent.textContent = `${gameState.allocation.stable}%`;
+      el.balancedPercent.textContent = `${gameState.allocation.balanced}%`;
+      el.riskPercent.textContent = `${gameState.allocation.risk}%`;
+
+      el.stableAmount.textContent = formatCurrency(currentValue * gameState.allocation.stable / 100);
+      el.balancedAmount.textContent = formatCurrency(currentValue * gameState.allocation.balanced / 100);
+      el.riskAmount.textContent = formatCurrency(currentValue * gameState.allocation.risk / 100);
+
+      el.allocationTotal.textContent = `Total Allocated: ${totalCheck.total}%`;
+
+      if (totalCheck.valid) {
+        el.allocationWarning.style.display = "none";
+      } else {
+        el.allocationWarning.style.display = "inline-flex";
+      }
+    }
+
+    function renderLastCycle() {
+      const lc = gameState.lastCycle;
+
+      el.lastCycleReturn.textContent = `${formatSignedPercent(lc.cycleReturnPercent)}`;
+      el.lastCycleReturn.className = `v ${getReturnClass(lc.cycleReturnPercent)}`;
+
+      el.lastActivity.textContent = formatNumber(lc.simulatedActivity);
+      el.lastFee.textContent = formatNumber(lc.feeGenerated);
+      el.lastEfficiencyDelta.textContent = formatSignedInteger(lc.efficiencyDelta);
+      el.lastEfficiencyDelta.className = `v ${getReturnClass(lc.efficiencyDelta)}`;
+
+      el.lastEventTitle.textContent = lc.eventTitle;
+      el.lastEventEffect.textContent = lc.eventEffect;
+
+      el.lastBurn.textContent = `${formatNumber(lc.burnAdded)} ASTY`;
+      el.lastGrowth.textContent = `${formatNumber(lc.growthAdded)} ASTY`;
+      el.lastTreasury.textContent = `${formatNumber(lc.treasuryAdded)} USDT`;
+
+      el.lastPerformance.textContent = getPerformanceLabel(lc.cycleReturnPercent);
+      el.lastPerformance.className = `v ${getReturnClass(lc.cycleReturnPercent)}`;
+    }
+
+    function renderBestRun() {
+      el.bestSystemValue.textContent = formatNumber(bestRunData.bestSystemValue);
+      el.bestBurn.textContent = formatNumber(bestRunData.bestBurn);
+      el.bestTreasury.textContent = formatNumber(bestRunData.bestTreasury);
+      el.bestEfficiency.textContent = Math.round(bestRunData.bestEfficiency);
+      el.bestStable.textContent = `${bestRunData.bestAllocation.stable || 0}%`;
+      el.bestBalanced.textContent = `${bestRunData.bestAllocation.balanced || 0}%`;
+      el.bestRisk.textContent = `${bestRunData.bestAllocation.risk || 0}%`;
+    }
+
+    function renderButtons() {
+      const allocationValid = validateAllocation().valid;
+      el.runCycleBtn.disabled = !allocationValid || !gameState.runActive || gameState.cycle >= gameState.maxCycles;
+    }
+
+    function saveBestRun() {
+      if (gameState.systemValue > bestRunData.bestSystemValue) {
+        bestRunData.bestSystemValue = gameState.systemValue;
+      }
+
+      if (gameState.totalBurn > bestRunData.bestBurn) {
+        bestRunData.bestBurn = gameState.totalBurn;
+      }
+
+      if (gameState.totalTreasury > bestRunData.bestTreasury) {
+        bestRunData.bestTreasury = gameState.totalTreasury;
+      }
+
+      if (gameState.bestEfficiency > bestRunData.bestEfficiency) {
+        bestRunData.bestEfficiency = gameState.bestEfficiency;
+      }
+
+      bestRunData.bestAllocation = { ...gameState.allocation };
+      bestRunData.lastResultText = buildResultText();
+
+      localStorage.setItem("astyBestRun", JSON.stringify(bestRunData));
+      renderBestRun();
+    }
+
+    function loadBestRun() {
+      try {
+        const saved = localStorage.getItem("astyBestRun");
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        Object.assign(bestRunData, parsed);
+      } catch (err) {
+        console.error("Failed to load best run", err);
+      }
+    }
+
+    function buildResultText() {
+      return `🟣 I built my $ASTY system with ${gameState.startingCapital.toFixed(0)} USDT
+
+Final System Value: ${gameState.systemValue.toFixed(2)} USDT
+Simulated ASTY Burn: ${gameState.totalBurn.toFixed(2)}
+Treasury Built: ${gameState.totalTreasury.toFixed(2)} USDT
+Best Efficiency: ${Math.round(gameState.bestEfficiency)}
+
+#ArbStrategy #ArbiTrage #DeFi #Trading`;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    }
+
+    function openFinalModal() {
+      const status = getFinalStatus(gameState.bestEfficiency);
+
+      el.finalTitle.textContent = "ASTY Run Complete";
+      el.finalStatusPill.textContent = status.label;
+      el.finalStatusPill.className = `status-pill ${status.className}`;
+      el.finalSummary.textContent =
+        `You completed ${gameState.maxCycles} cycles. Final value, treasury growth, burn output, and efficiency have been saved locally if this was your best run.`;
+
+      el.finalSystemValue.textContent = formatCurrency(gameState.systemValue);
+      el.finalBurn.textContent = `${formatNumber(gameState.totalBurn)} ASTY`;
+      el.finalTreasury.textContent = formatCurrency(gameState.totalTreasury);
+      el.finalEfficiency.textContent = Math.round(gameState.bestEfficiency);
+
+      el.finalModalBackdrop.style.display = "flex";
+    }
+
+    function closeFinalModal() {
+      el.finalModalBackdrop.style.display = "none";
+    }
+
+    function getFinalStatus(score) {
+      if (score >= 80) {
+        return { label: "Elite ASTY Machine", className: "status-elite" };
+      }
+      if (score >= 60) {
+        return { label: "High Efficiency System", className: "status-high" };
+      }
+      if (score >= 40) {
+        return { label: "Balanced ASTY Build", className: "status-balanced" };
+      }
+      return { label: "Inefficient Deployment", className: "status-inefficient" };
+    }
+
+    function getPerformanceLabel(value) {
+      if (value > 5) return "Excellent";
+      if (value > 2) return "Strong";
+      if (value > 0) return "Positive";
+      if (value === 0) return "Flat";
+      if (value > -4) return "Weak";
+      return "Poor";
+    }
+
+    function getReturnClass(value) {
+      if (value > 0) return "green";
+      if (value < 0) return "red";
+      return "purple";
+    }
+
+    function clampInteger(value) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return 0;
+      return Math.max(0, Math.min(100, Math.round(num)));
+    }
+
+    function getRandomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function formatCurrency(value) {
+      return `${value.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} USDT`;
+    }
+
+    function formatNumber(value) {
+      return value.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatSignedPercent(value) {
+      const sign = value > 0 ? "+" : "";
+      return `${sign}${value.toFixed(2)}%`;
+    }
+
+    function formatSignedInteger(value) {
+      if (value > 0) return `+${value}`;
+      return `${value}`;
+    }
+  </script>
+</body>
+</html>
