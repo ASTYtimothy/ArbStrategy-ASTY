@@ -19,7 +19,6 @@
       --yellow:#facc15;
       --red:#ef4444;
       --shadow:0 0 28px rgba(168,85,247,.18);
-      --shadow-strong:0 0 70px rgba(168,85,247,.30);
       --radius:22px;
     }
 
@@ -122,7 +121,6 @@
 
     .input-wrap{
       display:grid;
-      grid-template-columns:1fr;
       gap:10px;
     }
 
@@ -134,7 +132,7 @@
       margin-bottom:6px;
     }
 
-    textarea,input{
+    textarea,input,select{
       width:100%;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
@@ -153,7 +151,7 @@
       font-size:14px;
     }
 
-    input{
+    input,select{
       padding:12px 14px;
       font-size:14px;
     }
@@ -200,6 +198,8 @@
       border:1px solid rgba(239,68,68,.20);
       color:#ffd8d8;
     }
+
+    .hidden{display:none !important}
 
     .core-card{
       position:relative;
@@ -459,7 +459,7 @@
     .wallet-list{
       display:grid;
       gap:8px;
-      max-height:230px;
+      max-height:250px;
       overflow:auto;
     }
 
@@ -569,12 +569,16 @@
 
         <div class="row">
           <div>
-            <div class="mini-label">Solana RPC endpoint</div>
-            <input id="rpcInput" value="https://api.mainnet-beta.solana.com" />
+            <div class="mini-label">RPC source</div>
+            <select id="rpcSelect">
+              <option value="https://solana-rpc.publicnode.com">PublicNode</option>
+              <option value="https://solana.drpc.org">dRPC</option>
+              <option value="custom">Custom RPC</option>
+            </select>
           </div>
-          <div>
-            <div class="mini-label">ASTY mint</div>
-            <input id="mintInput" value="ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR" />
+          <div id="customRpcWrap" class="hidden">
+            <div class="mini-label">Custom RPC</div>
+            <input id="customRpcInput" placeholder="https://your-solana-rpc.example.com" />
           </div>
         </div>
 
@@ -634,21 +638,23 @@
     </section>
 
     <section class="panel result-panel">
-      <div class="mini-label">Wallet breakdown</div>
       <div class="wallet-list" id="walletList">
         <div class="empty">No wallets scanned yet.</div>
       </div>
       <div class="footer-note">
-        This scanner uses GeckoTerminal for ASTY token data and Solana RPC to read wallet token accounts in the browser.  [oai_citation:1‡api.geckoterminal.com](https://api.geckoterminal.com/api/v2/networks/solana/tokens/ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR?include=top_pools&include_composition=false&include_inactive_source=false)
+        Public RPCs can still rate-limit or block browser requests. If one fails, switch to the other or use Custom RPC. ASTY price and supply come from GeckoTerminal. 
       </div>
     </section>
   </div>
 
   <script>
+    const ASTY_MINT = "ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR";
+
     const ui = {
       walletInput: document.getElementById("walletInput"),
-      rpcInput: document.getElementById("rpcInput"),
-      mintInput: document.getElementById("mintInput"),
+      rpcSelect: document.getElementById("rpcSelect"),
+      customRpcWrap: document.getElementById("customRpcWrap"),
+      customRpcInput: document.getElementById("customRpcInput"),
       scanBtn: document.getElementById("scanBtn"),
       sampleBtn: document.getElementById("sampleBtn"),
       clearBtn: document.getElementById("clearBtn"),
@@ -721,6 +727,13 @@
       return unique.filter(isProbablySolanaAddress);
     }
 
+    function getRpcUrl() {
+      if (ui.rpcSelect.value === "custom") {
+        return ui.customRpcInput.value.trim();
+      }
+      return ui.rpcSelect.value.trim();
+    }
+
     async function solanaRpc(rpcUrl, method, params) {
       const res = await fetch(rpcUrl, {
         method: "POST",
@@ -744,10 +757,10 @@
       return json.result;
     }
 
-    async function getAstyAmountForWallet(rpcUrl, owner, mint) {
+    async function getAstyAmountForWallet(rpcUrl, owner) {
       const result = await solanaRpc(rpcUrl, "getTokenAccountsByOwner", [
         owner,
-        { mint },
+        { mint: ASTY_MINT },
         { encoding: "jsonParsed", commitment: "finalized" }
       ]);
 
@@ -765,8 +778,8 @@
       return total;
     }
 
-    async function fetchTokenDataFromGeckoTerminal(mint) {
-      const url = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${mint}?include=top_pools&include_composition=false&include_inactive_source=false`;
+    async function fetchTokenDataFromGeckoTerminal() {
+      const url = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${ASTY_MINT}?include=top_pools&include_composition=false&include_inactive_source=false`;
 
       const res = await fetch(url, {
         headers: { accept: "application/json" }
@@ -910,13 +923,18 @@
     async function scanWallets() {
       if (state.scanning) return;
 
-      const rpcUrl = ui.rpcInput.value.trim();
-      const mint = ui.mintInput.value.trim();
+      const rpcUrl = getRpcUrl();
       const wallets = parseWallets(ui.walletInput.value);
 
       if (!wallets.length) {
         setStatus("No valid wallets", "Paste at least one valid Solana wallet address.");
         flashPulse("INVALID", "red");
+        return;
+      }
+
+      if (!rpcUrl) {
+        setStatus("Missing RPC", "Select a public RPC or enter a custom RPC.");
+        flashPulse("RPC", "red");
         return;
       }
 
@@ -931,7 +949,7 @@
       flashPulse("SCANNING", "yellow");
 
       try {
-        const tokenData = await fetchTokenDataFromGeckoTerminal(mint);
+        const tokenData = await fetchTokenDataFromGeckoTerminal();
         const priceUsd = tokenData.priceUsd;
         const normalizedSupply = tokenData.normalizedSupply;
 
@@ -940,7 +958,7 @@
         const walletResults = [];
         for (let i = 0; i < wallets.length; i++) {
           setStatus("Reading wallets", `Scanning ${i + 1} of ${wallets.length}...`);
-          const asty = await getAstyAmountForWallet(rpcUrl, wallets[i], mint);
+          const asty = await getAstyAmountForWallet(rpcUrl, wallets[i]);
           const usd = asty * priceUsd;
           const supplyPct = normalizedSupply > 0 ? (asty / normalizedSupply) * 100 : 0;
 
@@ -970,7 +988,16 @@
         renderAnimated(previousUsd);
       } catch (err) {
         console.error(err);
-        setStatus("Scan failed", err.message || "Could not complete scan.");
+
+        let message = err.message || "Could not complete scan.";
+        if (message.includes("RPC 403")) {
+          message = "This RPC blocked browser access. Switch RPC source or use Custom RPC.";
+        }
+        if (message.includes("Failed to fetch")) {
+          message = "Request blocked or network error. Try the other RPC source.";
+        }
+
+        setStatus("Scan failed", message);
         flashPulse("ERROR", "red");
       } finally {
         state.scanning = false;
@@ -979,6 +1006,11 @@
         ui.clearBtn.disabled = false;
       }
     }
+
+    ui.rpcSelect.addEventListener("change", () => {
+      const isCustom = ui.rpcSelect.value === "custom";
+      ui.customRpcWrap.classList.toggle("hidden", !isCustom);
+    });
 
     ui.scanBtn.addEventListener("click", scanWallets);
 
