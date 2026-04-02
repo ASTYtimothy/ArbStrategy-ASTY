@@ -1,1091 +1,1223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ASTY 24H Capital Flow</title>
-  <style>
-    :root{
-      --bg:#06070c;
-      --bg2:#0a0d16;
-      --panel:rgba(18,22,36,0.72);
-      --panel-2:rgba(24,29,47,0.72);
-      --line:rgba(164,120,255,0.26);
-      --line-strong:rgba(173,125,255,0.65);
-      --text:#eef1ff;
-      --muted:#9ea7c7;
-      --purple:#a855f7;
-      --purple-2:#7c3aed;
-      --cyan:#34d3ff;
-      --green:#00d68f;
-      --orange:#ffb020;
-      --red:#ff5c7a;
-      --gold:#f6c453;
-      --shadow:0 0 22px rgba(168,85,247,0.28), 0 0 70px rgba(52,211,255,0.08);
-      --radius:20px;
-      --radius-sm:14px;
-      --border:1px solid rgba(255,255,255,0.08);
-      --max:1450px;
-    }
-
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;
-      padding:0;
-      background:
-        radial-gradient(circle at 15% 15%, rgba(168,85,247,0.14), transparent 28%),
-        radial-gradient(circle at 85% 20%, rgba(52,211,255,0.12), transparent 26%),
-        radial-gradient(circle at 50% 100%, rgba(124,58,237,0.12), transparent 35%),
-        linear-gradient(180deg, var(--bg), var(--bg2));
-      color:var(--text);
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      min-height:100%;
-      overflow-x:hidden;
-    }
-
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      opacity:.22;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 26px 26px;
-      mask-image: radial-gradient(circle at center, black 55%, transparent 95%);
-    }
-
-    .wrap{
-      width:min(var(--max), calc(100% - 28px));
-      margin:0 auto;
-      padding:20px 0 34px;
-      position:relative;
-      z-index:1;
-    }
-
-    .topbar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:center;
-      margin-bottom:18px;
-    }
-
-    .bubble{
-      text-decoration:none;
-      color:#fff;
-      font-weight:700;
-      font-size:13px;
-      letter-spacing:.02em;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.08);
-      background:rgba(255,255,255,0.05);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.22);
-      transition:.2s ease;
-      white-space:nowrap;
-    }
-
-    .bubble:hover{ transform:translateY(-2px); }
-    .bubble.primary{ background:linear-gradient(135deg, rgba(168,85,247,0.35), rgba(52,211,255,0.18)); }
-    .bubble.orange{ background:linear-gradient(135deg, rgba(255,176,32,0.36), rgba(255,125,32,0.18)); }
-    .bubble.green{ background:linear-gradient(135deg, rgba(0,214,143,0.28), rgba(52,211,255,0.14)); }
-
-    .hero{
-      text-align:center;
-      margin-bottom:18px;
-    }
-
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:#ccb6ff;
-      background:rgba(168,85,247,0.08);
-      border:1px solid rgba(168,85,247,0.18);
-      border-radius:999px;
-      padding:10px 14px;
-      margin-bottom:16px;
-    }
-
-    .dot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:linear-gradient(135deg, var(--purple), var(--cyan));
-      box-shadow:0 0 18px rgba(168,85,247,0.7);
-      animation:pulse 2s infinite;
-    }
-
-    h1{
-      margin:0;
-      font-size:clamp(34px, 5vw, 72px);
-      line-height:.95;
-      letter-spacing:-0.03em;
-      text-transform:uppercase;
-      text-shadow:0 0 24px rgba(168,85,247,0.18);
-    }
-
-    .sub{
-      width:min(950px, 100%);
-      margin:14px auto 0;
-      color:var(--muted);
-      font-size:15px;
-      line-height:1.7;
-    }
-
-    .cards{
-      display:grid;
-      grid-template-columns:repeat(5, minmax(0,1fr));
-      gap:12px;
-      margin:24px 0 18px;
-    }
-
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
-      border:var(--border);
-      border-radius:18px;
-      padding:16px 16px 15px;
-      backdrop-filter: blur(12px);
-      box-shadow:0 20px 35px rgba(0,0,0,0.25);
-      min-height:95px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .card::after{
-      content:"";
-      position:absolute;
-      inset:auto -10% -55% -10%;
-      height:90px;
-      background:radial-gradient(circle, rgba(168,85,247,0.18), transparent 70%);
-      pointer-events:none;
-    }
-
-    .label{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.14em;
-      color:#aeb7d6;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .value{
-      font-size:28px;
-      font-weight:900;
-      line-height:1;
-      letter-spacing:-0.03em;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .small{
-      margin-top:8px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    .panel{
-      position:relative;
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,0.07);
-      background:
-        radial-gradient(circle at 50% 10%, rgba(168,85,247,0.08), transparent 35%),
-        radial-gradient(circle at 50% 85%, rgba(52,211,255,0.06), transparent 35%),
-        linear-gradient(180deg, rgba(16,19,31,0.88), rgba(10,12,20,0.88));
-      backdrop-filter: blur(14px);
-      box-shadow:0 24px 70px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.04);
-      padding:20px;
-      overflow:hidden;
-    }
-
-    .flow-wrap{
-      position:relative;
-      min-height:760px;
-    }
-
-    .flow-grid{
-      position:relative;
-      z-index:2;
-      display:grid;
-      grid-template-columns: 1.1fr .95fr 1.15fr;
-      gap:22px;
-      min-height:760px;
-      align-items:center;
-    }
-
-    .cluster-title{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:#b9c2e3;
-      margin-bottom:14px;
-    }
-
-    .pool-col,.core-col,.out-col{
-      position:relative;
-      min-height:700px;
-    }
-
-    .pool-stack,
-    .out-stack{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      justify-content:center;
-      min-height:700px;
-    }
-
-    .node{
-      position:relative;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,0.08);
-      background:linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03));
-      backdrop-filter: blur(14px);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-
-    .node::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg, rgba(255,255,255,0.06), transparent 40%);
-      pointer-events:none;
-    }
-
-    .pool-node{
-      padding:16px 18px;
-      min-height:92px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
-
-    .pool-node .name{
-      font-weight:900;
-      font-size:16px;
-      letter-spacing:-0.02em;
-      margin-bottom:8px;
-    }
-
-    .pool-node .meta{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:11px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      padding:7px 10px;
-      border-radius:999px;
-      width:max-content;
-      margin-bottom:10px;
-    }
-
-    .badge.green{
-      background:rgba(0,214,143,0.12);
-      border:1px solid rgba(0,214,143,0.22);
-      color:#89ffd0;
-    }
-
-    .badge.yellow{
-      background:rgba(255,176,32,0.12);
-      border:1px solid rgba(255,176,32,0.25);
-      color:#ffd98d;
-    }
-
-    .badge.red{
-      background:rgba(255,92,122,0.12);
-      border:1px solid rgba(255,92,122,0.25);
-      color:#ffadbc;
-    }
-
-    .signal{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:currentColor;
-      box-shadow:0 0 12px currentColor;
-    }
-
-    .core-shell{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:700px;
-      position:relative;
-    }
-
-    .core-node{
-      width:min(380px, 100%);
-      min-height:360px;
-      padding:26px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      text-align:center;
-      border-radius:30px;
-      background:
-        radial-gradient(circle at 50% 35%, rgba(168,85,247,0.24), transparent 42%),
-        radial-gradient(circle at 50% 70%, rgba(52,211,255,0.12), transparent 55%),
-        linear-gradient(180deg, rgba(26,20,45,0.95), rgba(18,20,36,0.92));
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.08),
-        0 0 40px rgba(168,85,247,0.32),
-        0 0 90px rgba(52,211,255,0.12);
-      position:relative;
-    }
-
-    .core-ring,
-    .core-ring-2{
-      position:absolute;
-      inset:50%;
-      transform:translate(-50%, -50%);
-      border-radius:50%;
-      pointer-events:none;
-    }
-
-    .core-ring{
-      width:420px;
-      height:420px;
-      border:1px solid rgba(168,85,247,0.16);
-      animation:spin 20s linear infinite;
-    }
-
-    .core-ring-2{
-      width:510px;
-      height:510px;
-      border:1px dashed rgba(52,211,255,0.12);
-      animation:spin-rev 28s linear infinite;
-    }
-
-    .core-title{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      color:#c8d0ea;
-      margin-bottom:12px;
-    }
-
-    .core-value{
-      font-size: clamp(40px, 5vw, 64px);
-      font-weight: 900;
-      line-height: .95;
-      letter-spacing:-0.05em;
-      margin-bottom:14px;
-      text-shadow:0 0 30px rgba(168,85,247,0.35);
-    }
-
-    .core-desc{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.7;
-      max-width:280px;
-      margin:0 auto 18px;
-    }
-
-    .core-pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid rgba(168,85,247,0.22);
-      background:rgba(168,85,247,0.10);
-      color:#e3d4ff;
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.05em;
-    }
-
-    .out-node{
-      padding:22px 20px;
-      min-height:145px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      position:relative;
-    }
-
-    .out-node h3{
-      margin:0 0 8px;
-      font-size:28px;
-      line-height:1;
-      letter-spacing:-0.03em;
-    }
-
-    .out-node .pct{
-      font-size:13px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.16em;
-      margin-bottom:10px;
-    }
-
-    .out-node .v{
-      font-size:33px;
-      font-weight:900;
-      letter-spacing:-0.03em;
-      line-height:1;
-      margin-bottom:8px;
-    }
-
-    .out-node .t{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    .burn{ box-shadow:0 0 28px rgba(255,92,122,0.20), 0 0 70px rgba(255,92,122,0.08); }
-    .burn .pct, .burn h3{ color:#ff9cb2; }
-
-    .growth{ box-shadow:0 0 28px rgba(0,214,143,0.18), 0 0 70px rgba(0,214,143,0.08); }
-    .growth .pct, .growth h3{ color:#8dffd1; }
-
-    .treasury{ box-shadow:0 0 28px rgba(246,196,83,0.18), 0 0 70px rgba(246,196,83,0.08); }
-    .treasury .pct, .treasury h3{ color:#ffe39c; }
-
-    #flowSvg{
-      position:absolute;
-      inset:0;
-      z-index:1;
-      width:100%;
-      height:100%;
-      pointer-events:none;
-      overflow:visible;
-    }
-
-    .flow-line{
-      fill:none;
-      stroke:rgba(168,85,247,0.24);
-      stroke-width:3;
-      stroke-linecap:round;
-      filter: drop-shadow(0 0 10px rgba(168,85,247,0.25));
-    }
-
-    .flow-line.out-growth{ stroke:rgba(0,214,143,0.36); }
-    .flow-line.out-burn{ stroke:rgba(255,92,122,0.34); }
-    .flow-line.out-treasury{ stroke:rgba(246,196,83,0.34); }
-    .flow-line.in{ stroke:rgba(168,85,247,0.26); }
-
-    .flow-glow{
-      fill:none;
-      stroke-width:1.3;
-      stroke-dasharray:8 14;
-      opacity:.7;
-      animation:dash 7s linear infinite;
-    }
-
-    .flow-glow.in{ stroke:rgba(52,211,255,0.42); }
-    .flow-glow.out-growth{ stroke:rgba(0,214,143,0.56); }
-    .flow-glow.out-burn{ stroke:rgba(255,92,122,0.56); }
-    .flow-glow.out-treasury{ stroke:rgba(246,196,83,0.56); }
-
-    .particle{
-      position:absolute;
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      z-index:3;
-      pointer-events:none;
-      box-shadow:0 0 18px currentColor, 0 0 36px currentColor;
-      background:currentColor;
-    }
-
-    .legend{
-      display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
-      gap:12px;
-      margin-top:18px;
-    }
-
-    .legend-item{
-      background:rgba(255,255,255,0.04);
-      border:var(--border);
-      border-radius:18px;
-      padding:14px 15px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-    }
-
-    .legend-item strong{
-      display:block;
-      color:var(--text);
-      font-size:14px;
-      margin-bottom:4px;
-    }
-
-    .footer-note{
-      text-align:center;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.7;
-      margin-top:18px;
-      padding:0 10px;
-    }
-
-    .status{
-      text-align:center;
-      margin-top:14px;
-      color:#cbd4f0;
-      font-size:13px;
-      min-height:20px;
-    }
-
-    .loading{
-      opacity:.75;
-      animation:pulse 1.6s infinite;
-    }
-
-    .hidden-mobile{ display:block; }
-
-    @keyframes pulse{
-      0%,100%{ transform:scale(1); opacity:1; }
-      50%{ transform:scale(1.08); opacity:.75; }
-    }
-
-    @keyframes spin{
-      from{ transform:translate(-50%, -50%) rotate(0deg); }
-      to{ transform:translate(-50%, -50%) rotate(360deg); }
-    }
-
-    @keyframes spin-rev{
-      from{ transform:translate(-50%, -50%) rotate(360deg); }
-      to{ transform:translate(-50%, -50%) rotate(0deg); }
-    }
-
-    @keyframes dash{
-      from{ stroke-dashoffset:0; }
-      to{ stroke-dashoffset:-180; }
-    }
-
-    @media (max-width: 1200px){
-      .cards{ grid-template-columns:repeat(3, minmax(0,1fr)); }
-      .legend{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-    }
-
-    @media (max-width: 980px){
-      .flow-wrap{ min-height:auto; }
-      .flow-grid{
-        grid-template-columns:1fr;
-        min-height:auto;
-        gap:16px;
-      }
-      .pool-col,.core-col,.out-col,
-      .pool-stack,.out-stack,.core-shell{
-        min-height:auto;
-      }
-      .core-ring,.core-ring-2,#flowSvg,.particle{ display:none; }
-      .cards{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-      .legend{ grid-template-columns:1fr; }
-      .panel{ padding:16px; }
-      .pool-stack,.out-stack{ gap:12px; }
-      .core-node{ min-height:280px; }
-    }
-
-    @media (max-width: 640px){
-      .wrap{ width:min(100% - 16px, var(--max)); padding-top:14px; }
-      .cards{ grid-template-columns:1fr; }
-      .bubble{ font-size:12px; padding:9px 12px; }
-      .card{ min-height:86px; }
-      .value{ font-size:26px; }
-      .out-node h3{ font-size:24px; }
-      .out-node .v{ font-size:29px; }
-      .pool-node .name{ font-size:15px; }
-      .sub{ font-size:14px; }
-      .hidden-mobile{ display:none; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTY 24H Capital Flow</title>
+
+<style>
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+:root{
+  --bg1:#0b1020;
+  --bg2:#060914;
+  --panel:rgba(255,255,255,0.04);
+  --panel-border:rgba(255,255,255,0.08);
+  --text:#ffffff;
+  --muted:#b8b0d1;
+  --muted-2:#9f98bb;
+  --purple:#8b5cf6;
+  --purple-2:#6d28d9;
+  --cyan:#06b6d4;
+  --orange:#f59e0b;
+  --red:#fb7185;
+  --green:#10b981;
+  --gold:#fbbf24;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.22), transparent 30%),
+    radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.12), transparent 22%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  max-width: 1380px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+.blur-orb {
+  position: fixed;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  filter: blur(95px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+  animation: floatOrb 8s ease-in-out infinite;
+}
+.orb-1 { top: 80px; left: -80px; background: #7c3aed; }
+.orb-2 { bottom: 80px; right: -100px; background: #a78bfa; animation-delay: 2s; }
+
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-20px) translateX(15px); }
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(12px);
+  background: rgba(8, 11, 23, 0.72);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  z-index: 50;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 74px;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(124,58,237,0.35);
+  animation: pulseGlow 3s ease-in-out infinite;
+  background: rgba(255,255,255,0.04);
+}
+
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 18px rgba(124,58,237,0.30); transform: translateY(0); }
+  50% { box-shadow: 0 0 34px rgba(167,139,250,0.55); transform: translateY(-1px); }
+}
+
+.nav-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav-pill {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167,139,250,0.25);
+  background: rgba(255,255,255,0.05);
+  color: #dad6ea;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.nav-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(196,181,253,0.42);
+  background: rgba(255,255,255,0.06);
+  color: #ffffff;
+}
+
+.nav-pill.primary {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  border-color: transparent;
+}
+
+.nav-pill.cyan {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: white;
+  border-color: transparent;
+}
+
+.nav-pill.orange {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: white;
+  border-color: transparent;
+}
+
+.page-header {
+  position: relative;
+  z-index: 2;
+  padding: 28px 0 14px;
+}
+
+.page-title {
+  font-size: clamp(34px, 6vw, 62px);
+  line-height: 0.96;
+  letter-spacing: -1.2px;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.effect-slogan {
+  margin-top: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #d8ccff;
+}
+
+.effect-sub {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #b5afca;
+}
+
+.auto-update {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9f98bb;
+}
+
+.summary-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.summary-card {
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  min-height: 118px;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #c9b8ff;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  animation: pulseValue 3s ease-in-out infinite;
+  line-height: 1.05;
+  word-break: break-word;
+}
+
+.summary-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b8b0d1;
+  line-height: 1.4;
+}
+
+.flow-panel {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  margin-bottom: 30px;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.28);
+}
+
+.flow-panel-inner {
+  position: relative;
+  min-height: 860px;
+  padding: 18px;
+}
+
+.flow-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.flow-grid {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr 1.1fr;
+  gap: 22px;
+  min-height: 820px;
+  align-items: center;
+}
+
+.cluster-title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #cdbfff;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.pool-column,
+.core-column,
+.output-column {
+  min-height: 760px;
+  position: relative;
+}
+
+.pool-stack,
+.output-stack {
+  min-height: 760px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.pool-node,
+.output-node,
+.core-node {
+  position: relative;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.pool-node::before,
+.output-node::before,
+.core-node::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 42%);
+  pointer-events: none;
+}
+
+.pool-node {
+  padding: 16px 18px;
+  min-height: 96px;
+  box-shadow: 0 0 24px rgba(139,92,246,0.12);
+}
+
+.pool-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.pool-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: #b8b0d1;
+  line-height: 1.45;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  margin-bottom: 10px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.badge.high {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.25);
+  color: #7df0c8;
+}
+
+.badge.mid {
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.25);
+  color: #ffd774;
+}
+
+.badge.low {
+  background: rgba(251,113,133,0.12);
+  border: 1px solid rgba(251,113,133,0.25);
+  color: #ff9db0;
+}
+
+.core-shell {
+  min-height: 760px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.core-ring,
+.core-ring-2 {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.core-ring {
+  width: 420px;
+  height: 420px;
+  border: 1px solid rgba(139,92,246,0.18);
+  animation: spin 18s linear infinite;
+}
+
+.core-ring-2 {
+  width: 520px;
+  height: 520px;
+  border: 1px dashed rgba(6,182,212,0.14);
+  animation: spinReverse 26s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.core-node {
+  width: min(390px, 100%);
+  min-height: 380px;
+  padding: 28px;
+  text-align: center;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(124,58,237,0.24), transparent 42%),
+    radial-gradient(circle at 50% 70%, rgba(6,182,212,0.12), transparent 55%),
+    linear-gradient(180deg, rgba(26,20,45,0.96), rgba(18,20,36,0.92));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 0 40px rgba(139,92,246,0.28),
+    0 0 80px rgba(6,182,212,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.core-title {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #cdbfff;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.core-value {
+  font-size: clamp(42px, 5vw, 68px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  margin-bottom: 14px;
+  text-shadow: 0 0 22px rgba(139,92,246,0.28);
+}
+
+.core-desc {
+  color: #b8b0d1;
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 285px;
+  margin: 0 auto 16px;
+}
+
+.core-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167,139,250,0.22);
+  background: rgba(255,255,255,0.05);
+  color: #efe9ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.output-node {
+  min-height: 154px;
+  padding: 22px 20px;
+}
+
+.output-title {
+  margin: 0 0 8px;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.output-percent {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.output-value {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+
+.output-text {
+  color: #b8b0d1;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.output-node.burn {
+  box-shadow: 0 0 28px rgba(251,113,133,0.18);
+}
+.output-node.burn .output-title,
+.output-node.burn .output-percent {
+  color: #ff9cb0;
+}
+
+.output-node.growth {
+  box-shadow: 0 0 28px rgba(16,185,129,0.16);
+}
+.output-node.growth .output-title,
+.output-node.growth .output-percent {
+  color: #7df0c8;
+}
+
+.output-node.treasury {
+  box-shadow: 0 0 28px rgba(251,191,36,0.16);
+}
+.output-node.treasury .output-title,
+.output-node.treasury .output-percent {
+  color: #ffd774;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 0 18px 18px;
+  position: relative;
+  z-index: 3;
+}
+
+.legend-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #b8b0d1;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.legend-card strong {
+  display: block;
+  color: #ffffff;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.status-line {
+  padding: 0 18px 18px;
+  font-size: 12px;
+  color: #9f98bb;
+  position: relative;
+  z-index: 3;
+}
+
+.flow-path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.flow-path.in {
+  stroke: rgba(139,92,246,0.24);
+  filter: drop-shadow(0 0 8px rgba(139,92,246,0.20));
+}
+
+.flow-path.out-burn {
+  stroke: rgba(251,113,133,0.30);
+  filter: drop-shadow(0 0 8px rgba(251,113,133,0.18));
+}
+
+.flow-path.out-growth {
+  stroke: rgba(16,185,129,0.30);
+  filter: drop-shadow(0 0 8px rgba(16,185,129,0.18));
+}
+
+.flow-path.out-treasury {
+  stroke: rgba(251,191,36,0.30);
+  filter: drop-shadow(0 0 8px rgba(251,191,36,0.18));
+}
+
+.flow-glow {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-dasharray: 8 14;
+  animation: dashMove 7s linear infinite;
+}
+
+.flow-glow.in { stroke: rgba(6,182,212,0.46); }
+.flow-glow.out-burn { stroke: rgba(251,113,133,0.58); }
+.flow-glow.out-growth { stroke: rgba(16,185,129,0.58); }
+.flow-glow.out-treasury { stroke: rgba(251,191,36,0.58); }
+
+@keyframes dashMove {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -180; }
+}
+
+.flow-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  box-shadow: 0 0 14px currentColor, 0 0 24px currentColor;
+  background: currentColor;
+}
+
+@keyframes pulseValue {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.86; }
+}
+
+@media (max-width: 1180px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .legend-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .flow-panel-inner {
+    min-height: auto;
+  }
+
+  .flow-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 18px;
+  }
+
+  .pool-column,
+  .core-column,
+  .output-column,
+  .pool-stack,
+  .output-stack,
+  .core-shell {
+    min-height: auto;
+  }
+
+  .core-ring,
+  .core-ring-2,
+  .flow-svg,
+  .flow-particle {
+    display: none !important;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .container { padding: 0 14px; }
+
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 0;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legend-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-value {
+    font-size: 25px;
+  }
+
+  .output-title {
+    font-size: 24px;
+  }
+
+  .output-value {
+    font-size: 29px;
+  }
+
+  .pool-meta {
+    font-size: 12px;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="bubble primary" href="https://ArbStrategy.net" target="_blank" rel="noopener noreferrer">Dashboard</a>
-      <a class="bubble" href="https://arbstrategy-asty.github.io/ArbStrategy-ASTY/" target="_blank" rel="noopener noreferrer">System Overview</a>
-      <a class="bubble orange" href="https://birdeye.so/solana/token/ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR" target="_blank" rel="noopener noreferrer">BirdEye</a>
-      <a class="bubble green" href="https://t.me/ArbStrategyASTY" target="_blank" rel="noopener noreferrer">Telegram</a>
-      <a class="bubble" href="https://x.com/ArbStrategyASTY" target="_blank" rel="noopener noreferrer">X</a>
+
+<div class="blur-orb orb-1"></div>
+<div class="blur-orb orb-2"></div>
+
+<header class="topbar">
+  <div class="container nav">
+    <div class="brand">
+      <img src="assets/logo.png" alt="ASTY Logo" class="brand-logo">
+      <div>
+        <strong>$ASTY</strong><br>
+        <span style="font-size:12px;color:#aaa;">ArbStrategy</span>
+      </div>
     </div>
 
-    <section class="hero">
-      <div class="eyebrow"><span class="dot"></span> ASTY 24H Capital Flow</div>
-      <h1>Where the last 24 hours<br>powered $ASTY</h1>
-      <div class="sub">
-        This page turns your existing 24h pool performance into a live visual capital map.
-        All ASTY pools feed the protocol fee core, then the system applies the fixed allocation logic:
-        40% Burn, 40% Growth, 20% Treasury.
-      </div>
-    </section>
-
-    <section class="cards">
-      <div class="card">
-        <div class="label">24H Pool Revenue</div>
-        <div class="value" id="totalFees">$0</div>
-        <div class="small">Summed from live ASTY pool data over the last 24 hours.</div>
-      </div>
-      <div class="card">
-        <div class="label">ASTY Price</div>
-        <div class="value" id="astyPrice">$0.0000</div>
-        <div class="small">Live price from GeckoTerminal token data.</div>
-      </div>
-      <div class="card">
-        <div class="label">Active Pools</div>
-        <div class="value" id="activePools">0</div>
-        <div class="small">Pools currently included in the 24h flow map.</div>
-      </div>
-      <div class="card">
-        <div class="label">Top Contributing Pool</div>
-        <div class="value" id="topPool">-</div>
-        <div class="small" id="topPoolMeta">Waiting for data...</div>
-      </div>
-      <div class="card">
-        <div class="label">Last Refresh</div>
-        <div class="value" id="lastRefresh">--:--:--</div>
-        <div class="small">Auto-refresh every 60 seconds.</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="flow-wrap" id="flowWrap">
-        <svg id="flowSvg" viewBox="0 0 1400 760" preserveAspectRatio="none"></svg>
-
-        <div class="flow-grid">
-          <div class="pool-col">
-            <div class="cluster-title">Pool Network</div>
-            <div class="pool-stack" id="poolList">
-              <div class="node pool-node loading">
-                <div class="badge yellow"><span class="signal"></span> Loading</div>
-                <div class="name">Fetching ASTY pool network...</div>
-                <div class="meta"><span>Preparing live 24h flow data</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="core-col">
-            <div class="cluster-title" style="text-align:center;">Protocol Core</div>
-            <div class="core-shell">
-              <div class="core-ring hidden-mobile"></div>
-              <div class="core-ring-2 hidden-mobile"></div>
-              <div class="node core-node" id="coreNode">
-                <div class="core-title">24H Protocol Fee Core</div>
-                <div class="core-value" id="coreValue">$0</div>
-                <div class="core-desc">
-                  Every ASTY pool in the network contributes its last 24h revenue here.
-                  This is the central source that powers the protocol split.
-                </div>
-                <div class="core-pill" id="corePill">Awaiting pool data</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="out-col">
-            <div class="cluster-title">Protocol Allocation</div>
-            <div class="out-stack">
-              <div class="node out-node burn" id="burnNode">
-                <h3>Burn</h3>
-                <div class="pct">40% Allocation</div>
-                <div class="v" id="burnValue">$0</div>
-                <div class="t">Permanent supply reduction from the 24h protocol result.</div>
-              </div>
-
-              <div class="node out-node growth" id="growthNode">
-                <h3>Growth</h3>
-                <div class="pct">40% Allocation</div>
-                <div class="v" id="growthValue">$0</div>
-                <div class="t">Capital reserved for future high-efficiency liquidity growth.</div>
-              </div>
-
-              <div class="node out-node treasury" id="treasuryNode">
-                <h3>Treasury</h3>
-                <div class="pct">20% Allocation</div>
-                <div class="v" id="treasuryValue">$0</div>
-                <div class="t">Strategic reserve for system flexibility and expansion.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="legend">
-        <div class="legend-item">
-          <strong>How the source works</strong>
-          The left side shows live ASTY pools and their calculated 24h revenue contribution.
-        </div>
-        <div class="legend-item">
-          <strong>What flows into the core</strong>
-          Each pool contributes its 24h revenue based on live pool data and fee settings.
-        </div>
-        <div class="legend-item">
-          <strong>Why the right side matters</strong>
-          The protocol core is instantly split into Burn, Growth and Treasury.
-        </div>
-        <div class="legend-item">
-          <strong>Why this page is strong</strong>
-          It does not simulate the system. It visualizes what the last 24 hours actually produced.
-        </div>
-      </div>
-
-      <div class="status" id="status">Initializing live ASTY flow map...</div>
-      <div class="footer-note">
-        Token: ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR
-        <br>
-        Data source: GeckoTerminal API for live token and pool data.
-      </div>
-    </section>
+    <nav class="nav-links">
+      <a class="nav-pill" href="https://ArbStrategy.net" target="_blank" rel="noopener noreferrer">Website</a>
+      <a class="nav-pill" href="https://x.com/ArbStrategyASTY" target="_blank" rel="noopener noreferrer">X Twitter</a>
+      <a class="nav-pill cyan" href="https://arbstrategy-asty.github.io/ArbStrategy-ASTY/" target="_blank" rel="noopener noreferrer">System Overview</a>
+      <a class="nav-pill primary" href="https://t.me/ArbStrategyASTY" target="_blank" rel="noopener noreferrer">Telegram</a>
+      <a class="nav-pill orange" href="https://birdeye.so/solana/token/ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR" target="_blank" rel="noopener noreferrer">BirdEye</a>
+    </nav>
   </div>
+</header>
 
-  <script>
-    const ASTY_MINT = "ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR";
-    const API_BASE = "https://api.geckoterminal.com/api/v2";
-    const MAX_POOLS = 6;
-    const REFRESH_MS = 60000;
+<main class="container">
+  <section class="page-header">
+    <h1 class="page-title">ASTY 24H Capital Flow</h1>
 
-    const els = {
-      totalFees: document.getElementById("totalFees"),
-      astyPrice: document.getElementById("astyPrice"),
-      activePools: document.getElementById("activePools"),
-      topPool: document.getElementById("topPool"),
-      topPoolMeta: document.getElementById("topPoolMeta"),
-      lastRefresh: document.getElementById("lastRefresh"),
-      coreValue: document.getElementById("coreValue"),
-      corePill: document.getElementById("corePill"),
-      burnValue: document.getElementById("burnValue"),
-      growthValue: document.getElementById("growthValue"),
-      treasuryValue: document.getElementById("treasuryValue"),
-      poolList: document.getElementById("poolList"),
-      flowSvg: document.getElementById("flowSvg"),
-      status: document.getElementById("status"),
-      flowWrap: document.getElementById("flowWrap"),
-      coreNode: document.getElementById("coreNode"),
-      burnNode: document.getElementById("burnNode"),
-      growthNode: document.getElementById("growthNode"),
-      treasuryNode: document.getElementById("treasuryNode")
-    };
+    <div class="effect-slogan">🟣 The ASTY-Effect: The last 24 hours, visualized.</div>
+    <div class="effect-sub">All configured ASTY pools feed the protocol core. The 24h result is then split into Burn, Growth and Treasury.</div>
+    <div class="auto-update">Auto-updating every 60s</div>
 
-    let particles = [];
-    let animationFrame = null;
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">System Output 24h</div>
+        <div class="summary-value" id="fees24h">$0.00</div>
+        <div class="summary-sub">Combined 24h fee output across all configured ASTY pools</div>
+      </div>
 
-    function fmtUsd(n){
-      const num = Number(n || 0);
-      if (num >= 1000000) return "$" + (num / 1000000).toFixed(2) + "M";
-      if (num >= 1000) return "$" + num.toLocaleString(undefined, {maximumFractionDigits: 2});
-      if (num >= 1) return "$" + num.toFixed(2);
-      return "$" + num.toFixed(4);
-    }
+      <div class="summary-card">
+        <div class="summary-label">Top Pool 24h</div>
+        <div class="summary-value" id="topPool">-</div>
+        <div class="summary-sub" id="topPoolVal"></div>
+      </div>
 
-    function fmtPct(n){
-      return (Number(n || 0)).toFixed(2) + "%";
-    }
+      <div class="summary-card">
+        <div class="summary-label">Burn Allocation</div>
+        <div class="summary-value" id="burnSummary">$0.00</div>
+        <div class="summary-sub">40% of the current 24h protocol output</div>
+      </div>
 
-    function timeNow(){
-      return new Date().toLocaleTimeString("en-GB", { hour12:false });
-    }
+      <div class="summary-card">
+        <div class="summary-label">Growth Allocation</div>
+        <div class="summary-value" id="growthSummary">$0.00</div>
+        <div class="summary-sub">40% reserved for future liquidity growth</div>
+      </div>
 
-    function parseNum(value, fallback = 0){
-      const n = Number(value);
-      return Number.isFinite(n) ? n : fallback;
-    }
+      <div class="summary-card">
+        <div class="summary-label">Treasury Allocation</div>
+        <div class="summary-value" id="treasurySummary">$0.00</div>
+        <div class="summary-sub">20% strategic reserve allocation</div>
+      </div>
+    </div>
+  </section>
 
-    function tierFromRevenue(v, max){
-      if (!max || max <= 0) return { cls: "yellow", label: "Stable" };
-      const r = v / max;
-      if (r >= 0.75) return { cls: "green", label: "High Efficiency" };
-      if (r >= 0.2) return { cls: "yellow", label: "Stable" };
-      return { cls: "red", label: "Low Efficiency" };
-    }
+  <section class="flow-panel">
+    <div class="flow-panel-inner" id="flowWrap">
+      <svg class="flow-svg" id="flowSvg" viewBox="0 0 1400 860" preserveAspectRatio="none"></svg>
 
-    async function fetchJson(url){
-      const res = await fetch(url, {
-        headers: { "Accept": "application/json" }
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status + " for " + url);
-      return await res.json();
-    }
-
-    async function loadTokenData(){
-      const url = `${API_BASE}/networks/solana/tokens/${ASTY_MINT}`;
-      const json = await fetchJson(url);
-      const attr = json?.data?.attributes || {};
-      return {
-        priceUsd: parseNum(attr.price_usd, 0)
-      };
-    }
-
-    async function loadPools(){
-      const url = `${API_BASE}/networks/solana/tokens/${ASTY_MINT}/pools?page=1`;
-      const json = await fetchJson(url);
-      const pools = (json?.data || []).map(item => {
-        const a = item.attributes || {};
-        const feePct = parseNum(a.fee_percentage, 1);
-        const vol24 = parseNum(a.volume_usd?.h24, 0);
-        const reserve = parseNum(a.reserve_in_usd, 0);
-        const revenue24 = vol24 * (feePct / 100);
-        return {
-          id: item.id,
-          address: a.address || "",
-          name: a.name || "Unknown Pool",
-          feePct,
-          vol24,
-          reserve,
-          revenue24
-        };
-      });
-
-      return pools
-        .filter(p => p.vol24 > 0 || p.revenue24 > 0)
-        .sort((a, b) => b.revenue24 - a.revenue24)
-        .slice(0, MAX_POOLS);
-    }
-
-    function renderPools(pools){
-      if (!pools.length){
-        els.poolList.innerHTML = `
-          <div class="node pool-node">
-            <div class="badge red"><span class="signal"></span> No Data</div>
-            <div class="name">No ASTY pool data was returned.</div>
-            <div class="meta"><span>Please refresh later.</span></div>
+      <div class="flow-grid">
+        <div class="pool-column">
+          <div class="cluster-title">Pool Network</div>
+          <div class="pool-stack" id="poolList">
+            <div class="pool-node">Loading ASTY pool network...</div>
           </div>
-        `;
-        return;
-      }
+        </div>
 
-      const maxRev = Math.max(...pools.map(p => p.revenue24), 0);
+        <div class="core-column">
+          <div class="cluster-title" style="text-align:center;">Protocol Core</div>
+          <div class="core-shell">
+            <div class="core-ring"></div>
+            <div class="core-ring-2"></div>
 
-      els.poolList.innerHTML = pools.map((p, i) => {
-        const tier = tierFromRevenue(p.revenue24, maxRev);
-        return `
-          <div class="node pool-node pool-item" data-index="${i}">
-            <div class="badge ${tier.cls}">
-              <span class="signal"></span>
-              ${tier.label}
-            </div>
-            <div class="name">${escapeHtml(p.name)}</div>
-            <div class="meta">
-              <span>24h Revenue: ${fmtUsd(p.revenue24)}</span>
-              <span>Fee: ${fmtPct(p.feePct)}</span>
-              <span>24h Volume: ${fmtUsd(p.vol24)}</span>
+            <div class="core-node" id="coreNode">
+              <div class="core-title">24H Protocol Fee Core</div>
+              <div class="core-value" id="coreValue">$0.00</div>
+              <div class="core-desc">
+                Every configured ASTY pool contributes its last 24h output here.
+                This node represents the total protocol result before allocation.
+              </div>
+              <div class="core-pill" id="corePill">Waiting for pool data</div>
             </div>
           </div>
-        `;
-      }).join("");
-    }
+        </div>
 
-    function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, s => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#039;"
-      }[s]));
-    }
+        <div class="output-column">
+          <div class="cluster-title">Protocol Allocation</div>
+          <div class="output-stack">
+            <div class="output-node burn" id="burnNode">
+              <div class="output-title">Burn</div>
+              <div class="output-percent">40% Allocation</div>
+              <div class="output-value" id="burnValue">$0.00</div>
+              <div class="output-text">Permanent reduction of circulating supply based on the last 24h system result.</div>
+            </div>
 
-    function updateSummary(token, pools){
-      const totalFees = pools.reduce((sum, p) => sum + p.revenue24, 0);
-      const burn = totalFees * 0.40;
-      const growth = totalFees * 0.40;
-      const treasury = totalFees * 0.20;
-      const top = pools[0] || null;
+            <div class="output-node growth" id="growthNode">
+              <div class="output-title">Growth</div>
+              <div class="output-percent">40% Allocation</div>
+              <div class="output-value" id="growthValue">$0.00</div>
+              <div class="output-text">Capital reserved for future deployment into high-efficiency pools.</div>
+            </div>
 
-      els.totalFees.textContent = fmtUsd(totalFees);
-      els.astyPrice.textContent = "$" + Number(token.priceUsd || 0).toFixed(4);
-      els.activePools.textContent = String(pools.length);
-      els.topPool.textContent = top ? top.name.replace(" / ", "/") : "-";
-      els.topPoolMeta.textContent = top
-        ? `${fmtUsd(top.revenue24)} revenue in the last 24h`
-        : "No pool contributions found";
-      els.lastRefresh.textContent = timeNow();
-
-      els.coreValue.textContent = fmtUsd(totalFees);
-      els.corePill.textContent = `${pools.length} live pools feeding the protocol core`;
-
-      els.burnValue.textContent = fmtUsd(burn);
-      els.growthValue.textContent = fmtUsd(growth);
-      els.treasuryValue.textContent = fmtUsd(treasury);
-
-      els.status.textContent = totalFees > 0
-        ? `Live 24h ASTY flow updated successfully at ${timeNow()}.`
-        : "Data loaded, but no positive 24h pool revenue was available.";
-    }
-
-    function rectCenter(el){
-      const wrapRect = els.flowWrap.getBoundingClientRect();
-      const r = el.getBoundingClientRect();
-      return {
-        left: r.left - wrapRect.left,
-        top: r.top - wrapRect.top,
-        width: r.width,
-        height: r.height,
-        x: r.left - wrapRect.left + r.width / 2,
-        y: r.top - wrapRect.top + r.height / 2,
-        right: r.left - wrapRect.left + r.width,
-        bottom: r.top - wrapRect.top + r.height
-      };
-    }
-
-    function drawFlowLines(){
-      if (window.innerWidth <= 980){
-        els.flowSvg.innerHTML = "";
-        stopParticles();
-        return;
-      }
-
-      const poolItems = [...document.querySelectorAll(".pool-item")];
-      const core = rectCenter(els.coreNode);
-      const burn = rectCenter(els.burnNode);
-      const growth = rectCenter(els.growthNode);
-      const treasury = rectCenter(els.treasuryNode);
-
-      const svgWidth = els.flowWrap.clientWidth;
-      const svgHeight = els.flowWrap.clientHeight;
-      els.flowSvg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
-
-      let paths = [];
-
-      poolItems.forEach((item, idx) => {
-        const p = rectCenter(item);
-        const startX = p.right - 8;
-        const startY = p.y;
-        const endX = core.left + 8;
-        const endY = core.y + ((idx - (poolItems.length - 1) / 2) * 18);
-
-        const c1x = startX + Math.max(90, (endX - startX) * 0.28);
-        const c2x = endX - Math.max(110, (endX - startX) * 0.32);
-
-        const d = `M ${startX} ${startY} C ${c1x} ${startY}, ${c2x} ${endY}, ${endX} ${endY}`;
-        paths.push({ d, cls: "in", color: "#8b5cf6" });
-      });
-
-      [
-        { target: burn, cls: "out-burn", color: "#ff5c7a" },
-        { target: growth, cls: "out-growth", color: "#00d68f" },
-        { target: treasury, cls: "out-treasury", color: "#f6c453" }
-      ].forEach((entry, idx) => {
-        const startX = core.right - 8;
-        const startY = core.y + (idx - 1) * 20;
-        const endX = entry.target.left + 8;
-        const endY = entry.target.y;
-        const c1x = startX + Math.max(90, (endX - startX) * 0.30);
-        const c2x = endX - Math.max(90, (endX - startX) * 0.28);
-        const d = `M ${startX} ${startY} C ${c1x} ${startY}, ${c2x} ${endY}, ${endX} ${endY}`;
-        paths.push({ d, cls: entry.cls, color: entry.color });
-      });
-
-      els.flowSvg.innerHTML = paths.map((p, i) => `
-        <path id="path-${i}" class="flow-line ${p.cls} ${p.cls === 'in' ? 'in' : ''}" d="${p.d}"></path>
-        <path class="flow-glow ${p.cls} ${p.cls === 'in' ? 'in' : ''}" d="${p.d}"></path>
-      `).join("");
-
-      createParticles(paths);
-    }
-
-    function stopParticles(){
-      particles.forEach(p => p.el.remove());
-      particles = [];
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
-
-    function createParticles(paths){
-      stopParticles();
-
-      const pathEls = paths.map((_, i) => document.getElementById(`path-${i}`)).filter(Boolean);
-
-      pathEls.forEach((path, idx) => {
-        const cls = paths[idx].cls;
-        const color = paths[idx].color;
-        const count = cls === "in" ? 2 : 3;
-
-        for (let i = 0; i < count; i++){
-          const el = document.createElement("div");
-          el.className = "particle";
-          el.style.color = color;
-          el.style.opacity = "0.95";
-          els.flowWrap.appendChild(el);
-
-          particles.push({
-            el,
-            path,
-            offset: Math.random(),
-            speed: cls === "in"
-              ? 0.0015 + Math.random() * 0.0015
-              : 0.0017 + Math.random() * 0.0018
-          });
-        }
-      });
-
-      const tick = () => {
-        particles.forEach(p => {
-          p.offset += p.speed;
-          if (p.offset > 1) p.offset = 0;
-
-          const len = p.path.getTotalLength();
-          const pt = p.path.getPointAtLength(len * p.offset);
-          p.el.style.transform = `translate(${pt.x - 4}px, ${pt.y - 4}px)`;
-        });
-
-        animationFrame = requestAnimationFrame(tick);
-      };
-
-      tick();
-    }
-
-    async function refreshData(){
-      try{
-        els.status.textContent = "Refreshing ASTY flow data...";
-        const [token, pools] = await Promise.all([
-          loadTokenData(),
-          loadPools()
-        ]);
-
-        renderPools(pools);
-        updateSummary(token, pools);
-
-        requestAnimationFrame(() => {
-          drawFlowLines();
-        });
-      }catch(err){
-        console.error(err);
-        els.status.textContent = "Failed to load live ASTY data. Please try again.";
-        els.poolList.innerHTML = `
-          <div class="node pool-node">
-            <div class="badge red"><span class="signal"></span> Error</div>
-            <div class="name">Live data could not be loaded.</div>
-            <div class="meta"><span>${escapeHtml(err.message || "Unknown error")}</span></div>
+            <div class="output-node treasury" id="treasuryNode">
+              <div class="output-title">Treasury</div>
+              <div class="output-percent">20% Allocation</div>
+              <div class="output-value" id="treasuryValue">$0.00</div>
+              <div class="output-text">Strategic reserve allocation for flexibility, support and expansion.</div>
+            </div>
           </div>
-        `;
-      }
-    }
+        </div>
+      </div>
+    </div>
 
-    window.addEventListener("resize", () => {
-      clearTimeout(window.__astyResizeTimer);
-      window.__astyResizeTimer = setTimeout(drawFlowLines, 120);
+    <div class="legend-grid">
+      <div class="legend-card">
+        <strong>Left side</strong>
+        Real configured ASTY pools using your full pool list and live GeckoTerminal data.
+      </div>
+      <div class="legend-card">
+        <strong>Center</strong>
+        The core shows the combined 24h fee output from the entire pool network.
+      </div>
+      <div class="legend-card">
+        <strong>Right side</strong>
+        The protocol applies the fixed split of 40% Burn, 40% Growth and 20% Treasury.
+      </div>
+      <div class="legend-card">
+        <strong>Purpose</strong>
+        This page does not simulate. It visualizes the last 24 hours of ASTY system activity.
+      </div>
+    </div>
+
+    <div class="status-line" id="statusLine">Loading GeckoTerminal pool data...</div>
+  </section>
+</main>
+
+<script>
+const pools = [
+["3UvhqPrMyf13qgRodARDi5oGJGoxHYb2ykZdCaa1TV8i","ASTY/$WIF",1],
+["HeuivHLqCEmsgKhYhX1M6MGthEbtHrGmZdXQSCBVkstP","ASTY/ALCH",1],
+["CSD1NpGwhnohByefBp73Jyk6u6ZCkwwDFDVqvmkDrfxE","ASTY/ARBX",1],
+["DxMFG4kn8pxuf7AoKD1ffXjUhPpj4a8WAdgw87gyM2mj","ASTY/ARBX",0.3],
+["CoD6KLgnW2wKe2UtnNjSQk4RSS6fMU4P2vwKqsUxK9Bf","ASTY/Bonk",1],
+["7T6HixJyUfzSR88dhWC9tAjasXcdFyDrKmDtuzrXgt9j","ASTY/ETH",1],
+["B6fq1uNpMkyGANAQo5D9GJfMCkcaNewc6q8sWZAfWZ4M","ASTY/Fartcoin",1],
+["8aXv2DDRG3k5N3ADTw37Di4ytHGJ3ZaS2tPp1f2EW5ZD","ASTY/GEOD",1],
+["9xdaFi8dnHcoJHYqHU6wrDM5zRehanhwy9y21ahA5jYt","ASTY/Good",1],
+["92RKFRJSctMAuw8Tym7cZgd2yjMcHeZ5hDUMdnZd54zV","ASTY/Grandma",1],
+["Gec7ENkk9irtsmmwpwLHk1i4VntB4vFGRAe1ET3LeT3J","ASTY/JTO",1],
+["iZXTZMMS51US5erGnviWfc8CNGx5QDDzp6DERH25EtW","ASTY/JUP",1],
+["29eKi5ipMR9fLgkYpM91Xrab2LVBnUU75SYG8kCt1nis","ASTY/MET",1],
+["CSiAzSiCMNGjLwYKRdhDUjNwz4obf3Q5ZnMQECnmxshV","ASTY/PENGU",1],
+["2uNbRDLDeMizdJNEqKaapzAGJWVwa3uuJ3w4trVud4ZW","ASTY/pippin",1],
+["GyVyv2H2SB4fYaC7C6raWNSQqNhShdzNuSqQwG9uUUcE","ASTY/POPCAT",1],
+["RYztJXyPCmwUmfi7punwCf7q6FbxoJbRtBEodZ7j7GH","ASTY/PsyopAnime",1],
+["DfJsn7Ui6YBUC25kM5FoqrCYrqfRVCoSxpTeyEzWv4vT","ASTY/RAY",1],
+["2ufiEWc5wF8gJB1a9YiPkFuLwrFn4Zgyma1kdQRakoAr","ASTY/SOL",0.25],
+["7tbbdGzFZpjrPmM7jQderyyv1x8Ebz1vhwqNhEW97osb","ASTY/SOL",1],
+["HAieGroddWr3NZpSZYqqm39w2aTUuknWNXxfF6vWNpaR","ASTY/SOL",0.3],
+["BBVxTUtaagQgG5AgmNSYS9Pqwidc7yAbRF6avt48iF2u","ASTY/TAX",1],
+["CFcyQpye4K4pyhVPoSAgj3BAqNoWpZCvHpNncXssy7qH","ASTY/TAX",1],
+["tDqqTi8tJds88AkxFvhjZTQK5iDtV5ZG9ZkNYxh23MG","ASTY/UNI",1],
+["3HhGsPNMtSg1dNV9SVSfzGCQLx3Zp5giAvYJdQuuNqU9","ASTY/USDC",0.3],
+["5zCsWjFoEQ7jGNaHNwBRvZq7RMqVh6vQhmiYv4NWkDZK","ASTY/USDC",1],
+["BqdoyTYoXpnAzRafoBQPrY4ubVSzYE42rxJzNJwoxmZP","ASTY/USDC",0.25],
+["BWFDr72tjXJsRdUyAfqghv6sGXgQr2zJ78KdeV3c74q1","ASTY/USDC",2],
+["2Hjjn2aoVdUeGraV4vRak94GGAAW5w9syfVBeXU4Ad5J","ASTY/WBTC",1],
+["7Fr58kHKW85XiFgZ8WibumE7P5CLZFo4A8qsQxKNEWaE","ASTY/WhiteWhale",1],
+["4TgvcTKzq9zZR5znyak2y3tvaXg4q6hvKWEZgxesQqkx","ASTY/WLFI",1],
+["5wpSZwUmdXy5kB96n7U24iFzvbSNEvFd4BvERhhqYjQY","ASTY/WOJAK",1],
+["2aWCx2qrYmjen1N8UW3eLBzNu7fCPqxjL9NKXqHGXPHc","ASTY/ZBCN",1],
+["2WRrdtnKKr2eq67o4ZK2VQv7dXu4Pm8iz6TMN8UXvhbV","ASTY/SOL",2],
+["4iHVvcWHNYFDPFySosAx1qGZoFsDN7gXHxKqUFnGq6oJ","ASTY/BAT",1],
+["4kWT67c13svR9EfxM4TGn8inNqFsXeuAWQhn8KBVajBs","ASTY/ACC",1],
+["5fEodJwZNUTwXbiTRKU2KPCc4Xr15fPKVmxbAph7yX7v","ASTY/BTAX",1],
+["61HTuoKeWhEfscoBcd5zSNvmAyGpxdaUNMriLNnyyREz","ASTY/USDC",6],
+["8fBYS2Kq9f4Lm1SYdt4sdHRL27Ni8UcRMPtFNLdEcnAH","ASTY/Cake",1],
+["DdK87cRD7uzoUWc9JZNRNxPoLHXeAcGkfU2b49YTZrm3","ASTY/AVA",1],
+["DwZZHyqnzWEqNP4VuczHHwfJsni6xqo57TBm7SoeJ62u","ASTY/RENDER",1],
+["HvmNZyopYSwHRUXCUti4D6YANpfWscVLSQVv9nw2XYhx","ASTY/TURBO",1],
+["m1e9swvUoggDm2zLXzrzKRrbVwmGEP8aQy7BQigFZgK","ASTY/SOL",0.25],
+["3PVPMEseLJxE6yyB5eBJ3qzRCzCGN6L9qa85stcZH4FM","ASTY/testicle",1],
+["BM9W33kccA1GCdbkuGoNDvJLTQW5xKbKwXht8sCXayc3","ASTY/Buttcoin",1],
+["AiazXNe6ShtCbQHZbmpnkuuswVHFKh5rLZKeudzWU3aq","ASTY/BP",1],
+["DitqC25rriaMeZyiQPeXLNgfxqRTZL2qxFHp3MHrxM6t","ASTY/Punch",1],
+["mwsmVXehTt2aFonhJDyZWbwgpxDVM9MMfo7GUYrYL7K","ASTY/Restart",1],
+["2CBT1VgEunZmkQTNfPaNPpXWD5uVJ7KVHhjfT9SZZ3B7","ASTY/DUMB",1],
+["Fmna4bQBthaFT51VRtKR6QfgHisjxzcrzCWmPCP9dMNy","ASTY/INCOME",1],
+["AwmLBQ3keEicdD93gTr22avcJqsXwDTGMaLt25Jvyexo","ASTY/ORCA",1],
+["Ax38rDrpRMturM59zKBEGsNn2HjE96rC9Jz3WbAgXtYw","ASTY/SIMPLR",1],
+["DGuvY79xbLuJRb3CzwQL59z5zoit7KLnFwyL2t6EQCcj","ASTY/SERIOUS",1]
+];
+
+const CHUNK_SIZE = 25;
+const REFRESH_MS = 60000;
+const MAX_DISPLAY_POOLS = 8;
+
+const els = {
+  fees24h: document.getElementById("fees24h"),
+  topPool: document.getElementById("topPool"),
+  topPoolVal: document.getElementById("topPoolVal"),
+  burnSummary: document.getElementById("burnSummary"),
+  growthSummary: document.getElementById("growthSummary"),
+  treasurySummary: document.getElementById("treasurySummary"),
+  poolList: document.getElementById("poolList"),
+  coreValue: document.getElementById("coreValue"),
+  corePill: document.getElementById("corePill"),
+  burnValue: document.getElementById("burnValue"),
+  growthValue: document.getElementById("growthValue"),
+  treasuryValue: document.getElementById("treasuryValue"),
+  statusLine: document.getElementById("statusLine"),
+  flowWrap: document.getElementById("flowWrap"),
+  flowSvg: document.getElementById("flowSvg"),
+  coreNode: document.getElementById("coreNode"),
+  burnNode: document.getElementById("burnNode"),
+  growthNode: document.getElementById("growthNode"),
+  treasuryNode: document.getElementById("treasuryNode")
+};
+
+let particles = [];
+let animationFrame = null;
+
+function fmtUsd(n) {
+  if (!n || Number.isNaN(n)) return "$0.00";
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return "$" + (n / 1e3).toFixed(1) + "K";
+  return "$" + n.toFixed(2);
+}
+
+function formatLabel(label) {
+  return label.replace("/", " / ");
+}
+
+function formatFee(percentValue) {
+  return percentValue.toFixed(2).replace(/\.00$/, "") + "%";
+}
+
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+  return chunks;
+}
+
+function getTierClass(value, maxValue) {
+  if (!maxValue || maxValue <= 0) return { cls: "mid", label: "Stable" };
+  const ratio = value / maxValue;
+  if (ratio >= 0.75) return { cls: "high", label: "High Efficiency" };
+  if (ratio >= 0.2) return { cls: "mid", label: "Stable" };
+  return { cls: "low", label: "Low Efficiency" };
+}
+
+async function fetchGeckoChunk(chunk) {
+  const ids = chunk.map(([id]) => id).join(",");
+  const encodedIds = encodeURIComponent(ids);
+  const url = `https://api.geckoterminal.com/api/v2/networks/solana/pools/multi/${encodedIds}?include=base_token&include_volume_breakdown=false&include_composition=false`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+  return Array.isArray(data.data) ? data.data : [];
+}
+
+function renderPoolNodes(rows) {
+  if (!rows.length) {
+    els.poolList.innerHTML = `<div class="pool-node">No pool data available.</div>`;
+    return;
+  }
+
+  const maxFees = Math.max(...rows.map(row => row.fees24h), 0);
+  const displayRows = rows.slice(0, MAX_DISPLAY_POOLS);
+
+  els.poolList.innerHTML = displayRows.map((row, index) => {
+    const tier = getTierClass(row.fees24h, maxFees);
+    return `
+      <div class="pool-node pool-item" data-index="${index}">
+        <div class="badge ${tier.cls}">
+          <span class="badge-dot"></span>
+          ${tier.label}
+        </div>
+        <div class="pool-name">${row.label}</div>
+        <div class="pool-meta">
+          <span>24h Output: ${fmtUsd(row.fees24h)}</span>
+          <span>Fee: ${formatFee(row.feePercent)}</span>
+          <span>24h Volume: ${fmtUsd(row.volume24h)}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateSummary(rows) {
+  const total24h = rows.reduce((sum, row) => sum + row.fees24h, 0);
+  const burn = total24h * 0.40;
+  const growth = total24h * 0.40;
+  const treasury = total24h * 0.20;
+
+  els.fees24h.innerText = fmtUsd(total24h);
+  els.burnSummary.innerText = fmtUsd(burn);
+  els.growthSummary.innerText = fmtUsd(growth);
+  els.treasurySummary.innerText = fmtUsd(treasury);
+
+  els.coreValue.innerText = fmtUsd(total24h);
+  els.corePill.innerText = `${rows.length} live pools in the network`;
+
+  els.burnValue.innerText = fmtUsd(burn);
+  els.growthValue.innerText = fmtUsd(growth);
+  els.treasuryValue.innerText = fmtUsd(treasury);
+
+  if (rows.length > 0) {
+    els.topPool.innerText = rows[0].label;
+    els.topPoolVal.innerText = fmtUsd(rows[0].fees24h) + " in 24h";
+  } else {
+    els.topPool.innerText = "-";
+    els.topPoolVal.innerText = "";
+  }
+
+  return { total24h, burn, growth, treasury };
+}
+
+function rectCenter(el) {
+  const wrapRect = els.flowWrap.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  return {
+    left: r.left - wrapRect.left,
+    top: r.top - wrapRect.top,
+    right: r.right - wrapRect.left,
+    bottom: r.bottom - wrapRect.top,
+    width: r.width,
+    height: r.height,
+    x: r.left - wrapRect.left + r.width / 2,
+    y: r.top - wrapRect.top + r.height / 2
+  };
+}
+
+function stopParticles() {
+  particles.forEach(p => p.el.remove());
+  particles = [];
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+  animationFrame = null;
+}
+
+function createParticles(paths) {
+  stopParticles();
+
+  const pathEls = paths
+    .map((_, i) => document.getElementById(`flow-path-${i}`))
+    .filter(Boolean);
+
+  pathEls.forEach((pathEl, idx) => {
+    const cfg = paths[idx];
+    const count = cfg.type === "in" ? 2 : 3;
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("div");
+      el.className = "flow-particle";
+      el.style.color = cfg.color;
+      els.flowWrap.appendChild(el);
+
+      particles.push({
+        el,
+        path: pathEl,
+        offset: Math.random(),
+        speed: cfg.type === "in"
+          ? 0.0015 + Math.random() * 0.0012
+          : 0.0017 + Math.random() * 0.0015
+      });
+    }
+  });
+
+  const tick = () => {
+    particles.forEach(p => {
+      p.offset += p.speed;
+      if (p.offset > 1) p.offset = 0;
+
+      const len = p.path.getTotalLength();
+      const pt = p.path.getPointAtLength(len * p.offset);
+      p.el.style.transform = `translate(${pt.x - 4}px, ${pt.y - 4}px)`;
     });
 
-    refreshData();
-    setInterval(refreshData, REFRESH_MS);
-  </script>
+    animationFrame = requestAnimationFrame(tick);
+  };
+
+  tick();
+}
+
+function drawFlowLines() {
+  if (window.innerWidth <= 980) {
+    els.flowSvg.innerHTML = "";
+    stopParticles();
+    return;
+  }
+
+  const poolItems = [...document.querySelectorAll(".pool-item")];
+  if (!poolItems.length) return;
+
+  const core = rectCenter(els.coreNode);
+  const burn = rectCenter(els.burnNode);
+  const growth = rectCenter(els.growthNode);
+  const treasury = rectCenter(els.treasuryNode);
+
+  const width = els.flowWrap.clientWidth;
+  const height = els.flowWrap.clientHeight;
+  els.flowSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  const paths = [];
+
+  poolItems.forEach((item, idx) => {
+    const p = rectCenter(item);
+
+    const startX = p.right - 8;
+    const startY = p.y;
+
+    const endX = core.left + 8;
+    const endY = core.y + ((idx - (poolItems.length - 1) / 2) * 18);
+
+    const c1x = startX + Math.max(90, (endX - startX) * 0.28);
+    const c2x = endX - Math.max(110, (endX - startX) * 0.32);
+
+    paths.push({
+      d: `M ${startX} ${startY} C ${c1x} ${startY}, ${c2x} ${endY}, ${endX} ${endY}`,
+      cls: "in",
+      type: "in",
+      color: "#8b5cf6"
+    });
+  });
+
+  [
+    { target: burn, cls: "out-burn", type: "out", color: "#fb7185" },
+    { target: growth, cls: "out-growth", type: "out", color: "#10b981" },
+    { target: treasury, cls: "out-treasury", type: "out", color: "#fbbf24" }
+  ].forEach((entry, idx) => {
+    const startX = core.right - 8;
+    const startY = core.y + (idx - 1) * 20;
+
+    const endX = entry.target.left + 8;
+    const endY = entry.target.y;
+
+    const c1x = startX + Math.max(90, (endX - startX) * 0.30);
+    const c2x = endX - Math.max(90, (endX - startX) * 0.28);
+
+    paths.push({
+      d: `M ${startX} ${startY} C ${c1x} ${startY}, ${c2x} ${endY}, ${endX} ${endY}`,
+      cls: entry.cls,
+      type: entry.type,
+      color: entry.color
+    });
+  });
+
+  els.flowSvg.innerHTML = paths.map((p, i) => `
+    <path id="flow-path-${i}" class="flow-path ${p.cls}" d="${p.d}"></path>
+    <path class="flow-glow ${p.cls}" d="${p.d}"></path>
+  `).join("");
+
+  createParticles(paths);
+}
+
+async function load() {
+  try {
+    els.statusLine.textContent = "Loading GeckoTerminal pool data...";
+
+    const chunks = chunkArray(pools, CHUNK_SIZE);
+    const responses = await Promise.all(chunks.map(fetchGeckoChunk));
+    const flatPools = responses.flat();
+
+    const geckoMap = new Map();
+    for (const item of flatPools) {
+      const address = item?.attributes?.address;
+      if (address) geckoMap.set(address, item);
+    }
+
+    const rows = pools.map(([id, label, feePercent]) => {
+      const item = geckoMap.get(id);
+      if (!item) return null;
+
+      const attrs = item.attributes || {};
+      const fee = feePercent / 100;
+      const volume24h = parseFloat(attrs.volume_usd?.h24 || "0");
+
+      return {
+        id,
+        label: formatLabel(label),
+        feePercent,
+        volume24h,
+        fees24h: volume24h * fee
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.fees24h - a.fees24h);
+
+    renderPoolNodes(rows);
+    updateSummary(rows);
+
+    requestAnimationFrame(() => {
+      drawFlowLines();
+    });
+
+    els.statusLine.textContent = rows.length
+      ? `Loaded ${rows.length} pools. Fancy map updated successfully.`
+      : "No GeckoTerminal pool data available.";
+  } catch (err) {
+    console.error(err);
+    els.statusLine.textContent = "Failed to load GeckoTerminal pool data.";
+    els.poolList.innerHTML = `<div class="pool-node">Failed to load ASTY pool network.</div>`;
+    stopParticles();
+    els.flowSvg.innerHTML = "";
+  }
+}
+
+window.addEventListener("resize", () => {
+  clearTimeout(window.__astyFlowResize);
+  window.__astyFlowResize = setTimeout(drawFlowLines, 120);
+});
+
+load();
+setInterval(load, REFRESH_MS);
+</script>
+
 </body>
 </html>
