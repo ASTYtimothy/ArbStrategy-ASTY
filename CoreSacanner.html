@@ -716,7 +716,20 @@
       return total;
     }
 
-    async function fetchTokenDataFromGeckoTerminal() {
+    async function getAstySupply(rpcUrl) {
+      const result = await solanaRpc(rpcUrl, "getTokenSupply", [
+        ASTY_MINT
+      ]);
+
+      const supply =
+        result?.value?.uiAmountString ??
+        result?.value?.uiAmount ??
+        "0";
+
+      return Number(supply) || 0;
+    }
+
+    async function fetchAstyPriceFromGeckoTerminal() {
       const url = `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${ASTY_MINT}?include=top_pools&include_composition=false&include_inactive_source=false`;
 
       const res = await fetch(url, {
@@ -757,12 +770,7 @@
         throw new Error("ASTY price not found in GeckoTerminal response");
       }
 
-      const normalizedSupply = Number(json?.data?.attributes?.normalized_total_supply || 0);
-
-      return {
-        priceUsd,
-        normalizedSupply
-      };
+      return { priceUsd };
     }
 
     function setStatus(title, sub) {
@@ -879,9 +887,9 @@
       flashPulse("SCANNING", "yellow");
 
       try {
-        const tokenData = await fetchTokenDataFromGeckoTerminal();
+        const tokenData = await fetchAstyPriceFromGeckoTerminal();
         const priceUsd = tokenData.priceUsd;
-        const normalizedSupply = tokenData.normalizedSupply;
+        const normalizedSupply = await getAstySupply(DEFAULT_RPC);
 
         setStatus("Price loaded", `ASTY price detected at ${formatUsd(priceUsd, 4)}. Scanning wallets...`);
 
