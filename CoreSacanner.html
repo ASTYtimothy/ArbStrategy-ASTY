@@ -103,6 +103,7 @@
     }
 
     .brand-text{min-width:0}
+
     .title{
       margin:0;
       font-size:clamp(24px,5vw,34px);
@@ -132,7 +133,7 @@
       margin-bottom:6px;
     }
 
-    textarea,input,select{
+    textarea{
       width:100%;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
@@ -140,9 +141,6 @@
       border-radius:16px;
       outline:none;
       font:inherit;
-    }
-
-    textarea{
       min-height:98px;
       max-height:160px;
       padding:12px 14px;
@@ -151,20 +149,9 @@
       font-size:14px;
     }
 
-    input,select{
-      padding:12px 14px;
-      font-size:14px;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
     .btn-row{
       display:grid;
-      grid-template-columns:1fr 1fr 1fr;
+      grid-template-columns:1fr 1fr;
       gap:10px;
     }
 
@@ -188,18 +175,11 @@
       box-shadow:0 0 22px rgba(168,85,247,.22);
     }
 
-    .btn-secondary{
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-    }
-
     .btn-danger{
       background:rgba(239,68,68,.10);
       border:1px solid rgba(239,68,68,.20);
       color:#ffd8d8;
     }
-
-    .hidden{display:none !important}
 
     .core-card{
       position:relative;
@@ -475,6 +455,7 @@
     }
 
     .wallet-main{min-width:0}
+
     .wallet-addr{
       font-size:13px;
       font-weight:800;
@@ -521,13 +502,6 @@
       font-size:13px;
     }
 
-    .footer-note{
-      color:var(--muted);
-      font-size:11px;
-      line-height:1.45;
-      margin-top:8px;
-    }
-
     .green{color:var(--green)}
     .yellow{color:var(--yellow)}
     .red{color:var(--red)}
@@ -535,9 +509,7 @@
 
     @media (max-width:420px){
       .app{padding:10px}
-      .row{grid-template-columns:1fr}
       .btn-row{grid-template-columns:1fr 1fr}
-      .btn-row button:last-child{grid-column:1 / -1}
       .hud{grid-template-columns:repeat(2,1fr)}
       .hud-box{padding:8px}
       .ring.r1{width:270px;height:270px}
@@ -567,24 +539,8 @@
           <textarea id="walletInput" placeholder="Paste Solana wallet addresses here, one per line"></textarea>
         </div>
 
-        <div class="row">
-          <div>
-            <div class="mini-label">RPC source</div>
-            <select id="rpcSelect">
-              <option value="https://solana-rpc.publicnode.com">PublicNode</option>
-              <option value="https://solana.drpc.org">dRPC</option>
-              <option value="custom">Custom RPC</option>
-            </select>
-          </div>
-          <div id="customRpcWrap" class="hidden">
-            <div class="mini-label">Custom RPC</div>
-            <input id="customRpcInput" placeholder="https://your-solana-rpc.example.com" />
-          </div>
-        </div>
-
         <div class="btn-row">
           <button class="btn-primary" id="scanBtn">Scan Wallets</button>
-          <button class="btn-secondary" id="sampleBtn">Sample</button>
           <button class="btn-danger" id="clearBtn">Clear</button>
         </div>
       </div>
@@ -594,7 +550,7 @@
       <div class="hud">
         <div class="hud-box">
           <div class="hud-k">ASTY Price</div>
-          <div class="hud-v" id="priceBox">$0.000</div>
+          <div class="hud-v" id="priceBox">$0.0000</div>
         </div>
         <div class="hud-box">
           <div class="hud-k">Wallets</div>
@@ -641,22 +597,16 @@
       <div class="wallet-list" id="walletList">
         <div class="empty">No wallets scanned yet.</div>
       </div>
-      <div class="footer-note">
-        Public RPCs can still rate-limit or block browser requests. If one fails, switch to the other or use Custom RPC. ASTY price and supply come from GeckoTerminal. 
-      </div>
     </section>
   </div>
 
   <script>
     const ASTY_MINT = "ASTYqeaoK83Zs1pTFEXZUB6BM8cG8YLTsN852NUkt7ZR";
+    const DEFAULT_RPC = "https://solana-rpc.publicnode.com";
 
     const ui = {
       walletInput: document.getElementById("walletInput"),
-      rpcSelect: document.getElementById("rpcSelect"),
-      customRpcWrap: document.getElementById("customRpcWrap"),
-      customRpcInput: document.getElementById("customRpcInput"),
       scanBtn: document.getElementById("scanBtn"),
-      sampleBtn: document.getElementById("sampleBtn"),
       clearBtn: document.getElementById("clearBtn"),
       priceBox: document.getElementById("priceBox"),
       walletCountBox: document.getElementById("walletCountBox"),
@@ -682,17 +632,12 @@
       wallets: []
     };
 
-    const SAMPLE_WALLETS = [
-      "8J6Vq8m5K4z5z9SgD2d1W2fR1nQ4t9T2iQ2vXq4rN7Qp",
-      "4N9bL8a9fW8cV8m2rP5qK2wE7zQ2cG8mT4vTn6uD2dGh"
-    ];
-
-    function formatUsd(v) {
-  return `$${Number(v).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}`;
-}
+    function formatUsd(v, digits = 2) {
+      return `$${Number(v).toLocaleString("en-US", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      })}`;
+    }
 
     function formatNum(v, max = 2) {
       return Number(v).toLocaleString("en-US", {
@@ -725,13 +670,6 @@
 
       const unique = [...new Set(raw)];
       return unique.filter(isProbablySolanaAddress);
-    }
-
-    function getRpcUrl() {
-      if (ui.rpcSelect.value === "custom") {
-        return ui.customRpcInput.value.trim();
-      }
-      return ui.rpcSelect.value.trim();
     }
 
     async function solanaRpc(rpcUrl, method, params) {
@@ -898,7 +836,7 @@
     }
 
     function renderStatic() {
-      ui.priceBox.textContent = formatUsd(state.priceUsd);
+      ui.priceBox.textContent = formatUsd(state.priceUsd, 4);
       ui.walletCountBox.textContent = String(state.wallets.length);
       ui.astyTotalBox.textContent = formatNum(state.totalAsty, 4);
       ui.supplyPctBox.textContent = formatPct(state.supplyPct, 4);
@@ -910,7 +848,7 @@
       renderStatic();
 
       animateNumber(previousUsd, state.totalUsd, 1050, value => {
-        ui.coreTotal.textContent = formatUsd(value);
+        ui.coreTotal.textContent = formatUsd(value, 2);
       });
 
       const subText = state.wallets.length
@@ -923,7 +861,6 @@
     async function scanWallets() {
       if (state.scanning) return;
 
-      const rpcUrl = getRpcUrl();
       const wallets = parseWallets(ui.walletInput.value);
 
       if (!wallets.length) {
@@ -932,15 +869,8 @@
         return;
       }
 
-      if (!rpcUrl) {
-        setStatus("Missing RPC", "Select a public RPC or enter a custom RPC.");
-        flashPulse("RPC", "red");
-        return;
-      }
-
       state.scanning = true;
       ui.scanBtn.disabled = true;
-      ui.sampleBtn.disabled = true;
       ui.clearBtn.disabled = true;
 
       const previousUsd = state.totalUsd || 0;
@@ -953,12 +883,12 @@
         const priceUsd = tokenData.priceUsd;
         const normalizedSupply = tokenData.normalizedSupply;
 
-        setStatus("Price loaded", `ASTY price detected at ${formatUsd(priceUsd)}. Scanning wallets...`);
+        setStatus("Price loaded", `ASTY price detected at ${formatUsd(priceUsd, 4)}. Scanning wallets...`);
 
         const walletResults = [];
         for (let i = 0; i < wallets.length; i++) {
           setStatus("Reading wallets", `Scanning ${i + 1} of ${wallets.length}...`);
-          const asty = await getAstyAmountForWallet(rpcUrl, wallets[i]);
+          const asty = await getAstyAmountForWallet(DEFAULT_RPC, wallets[i]);
           const usd = asty * priceUsd;
           const supplyPct = normalizedSupply > 0 ? (asty / normalizedSupply) * 100 : 0;
 
@@ -991,10 +921,10 @@
 
         let message = err.message || "Could not complete scan.";
         if (message.includes("RPC 403")) {
-          message = "This RPC blocked browser access. Switch RPC source or use Custom RPC.";
+          message = "Public RPC blocked browser access.";
         }
         if (message.includes("Failed to fetch")) {
-          message = "Request blocked or network error. Try the other RPC source.";
+          message = "Request blocked or network error.";
         }
 
         setStatus("Scan failed", message);
@@ -1002,23 +932,11 @@
       } finally {
         state.scanning = false;
         ui.scanBtn.disabled = false;
-        ui.sampleBtn.disabled = false;
         ui.clearBtn.disabled = false;
       }
     }
 
-    ui.rpcSelect.addEventListener("change", () => {
-      const isCustom = ui.rpcSelect.value === "custom";
-      ui.customRpcWrap.classList.toggle("hidden", !isCustom);
-    });
-
     ui.scanBtn.addEventListener("click", scanWallets);
-
-    ui.sampleBtn.addEventListener("click", () => {
-      ui.walletInput.value = SAMPLE_WALLETS.join("\n");
-      setStatus("Sample loaded", "Replace the sample addresses with your own wallets.");
-      flashPulse("SAMPLE", "purple");
-    });
 
     ui.clearBtn.addEventListener("click", () => {
       ui.walletInput.value = "";
@@ -1030,7 +948,7 @@
       state.wallets = [];
       ui.coreTotal.textContent = "$0.00";
       ui.coreSub.textContent = "Paste wallets above and scan the ASTY core.";
-      ui.priceBox.textContent = "$0.00";
+      ui.priceBox.textContent = "$0.0000";
       ui.walletCountBox.textContent = "0";
       ui.astyTotalBox.textContent = "0";
       ui.supplyPctBox.textContent = "0.0000%";
