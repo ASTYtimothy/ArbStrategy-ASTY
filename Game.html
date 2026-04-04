@@ -10,11 +10,7 @@
       --bg1:#0b0614;
       --bg2:#140a22;
       --bg3:#22103a;
-      --p1:#7c3aed;
-      --p2:#9b5cff;
-      --p3:#c084fc;
       --white:#faf7ff;
-      --soft:rgba(255,255,255,.72);
       --border:rgba(220,190,255,.16);
     }
 
@@ -84,7 +80,7 @@
       min-width:110px;
       padding:10px 12px;
       border-radius:16px;
-      border:1px solid rgba(220,190,255,.16);
+      border:1px solid var(--border);
       background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
       backdrop-filter:blur(10px);
       box-shadow:0 10px 30px rgba(0,0,0,.24);
@@ -189,7 +185,7 @@
     }
 
     p{
-      max-width:480px;
+      max-width:520px;
       margin:0 0 22px;
       color:rgba(255,255,255,.76);
       line-height:1.55;
@@ -304,10 +300,14 @@
           <div class="label">Speed</div>
           <div class="value" id="speedEl">1.0x</div>
         </div>
+        <div class="card">
+          <div class="label">Jumps</div>
+          <div class="value" id="jumpsEl">2</div>
+        </div>
       </div>
     </div>
 
-    <div class="hint">Space / Click / Tap to jump</div>
+    <div class="hint">Space / Click / Tap = jump, with double jump</div>
 
     <div class="overlay" id="startScreen">
       <div class="logo-wrap">
@@ -316,7 +316,7 @@
       <div class="pill">ASTY ARCADE MODE</div>
       <h1>ASTY Runner</h1>
       <p>
-        Run from left to right, collect ASTY coins and jump over SELL, DUMP and DEAD POOL.
+        Collect ASTY coins, avoid the monsters and survive the loop. Double jump is enabled. Background music starts with the run.
       </p>
       <div class="buttons">
         <button class="btn btn-primary" id="startBtn">START RUN</button>
@@ -349,6 +349,8 @@
     </div>
   </div>
 
+  <audio id="bgMusic" src="assets/music.mp3" loop preload="auto"></audio>
+
   <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
@@ -356,6 +358,7 @@
     const scoreEl = document.getElementById("scoreEl");
     const collectedEl = document.getElementById("collectedEl");
     const speedEl = document.getElementById("speedEl");
+    const jumpsEl = document.getElementById("jumpsEl");
 
     const startScreen = document.getElementById("startScreen");
     const endScreen = document.getElementById("endScreen");
@@ -370,8 +373,19 @@
     const finalStatus = document.getElementById("finalStatus");
     const resultText = document.getElementById("resultText");
 
+    const bgMusic = document.getElementById("bgMusic");
+
     const logo = new Image();
     logo.src = "assets/logo.png";
+
+    const sellImg = new Image();
+    sellImg.src = "assets/sell.png";
+
+    const dumpImg = new Image();
+    dumpImg.src = "assets/dump.png";
+
+    const scamImg = new Image();
+    scamImg.src = "assets/scam.png";
 
     let W = 0, H = 0;
     let DPR = Math.max(1, window.devicePixelRatio || 1);
@@ -406,13 +420,13 @@
     let stars = [];
     let glowOrbs = [];
     let coins = [];
-    let obstacles = [];
+    let monsters = [];
     let particles = [];
     let floatingTexts = [];
 
     let coinSpawnTimer = 0;
-    let obstacleSpawnTimer = 0;
-    let nextObstacleMinGap = 0;
+    let monsterSpawnTimer = 0;
+    let minMonsterGapPx = 0;
 
     const player = {
       x: 140,
@@ -421,16 +435,17 @@
       h: 72,
       vy: 0,
       gravity: 1650,
-      jumpPower: -700,
+      jumpPower: -690,
       grounded: true,
       rotation: 0,
-      trail: []
+      trail: [],
+      jumpsLeft: 2
     };
 
-    const obstacleTypes = [
-      { text: "SELL", c1: "#ff5577", c2: "#ff7a90", w: 96, h: 52 },
-      { text: "DUMP", c1: "#ff8a5c", c2: "#ffb14a", w: 96, h: 52 },
-      { text: "DEAD POOL", c1: "#64748b", c2: "#94a3b8", w: 150, h: 42 }
+    const monsterTypes = [
+      { name: "SELL", img: sellImg, c1: "#ff5577", c2: "#ff7a90", w: 78, h: 78 },
+      { name: "DUMP", img: dumpImg, c1: "#ff8a5c", c2: "#ffb14a", w: 86, h: 86 },
+      { name: "SCAM", img: scamImg, c1: "#94a3b8", c2: "#cbd5e1", w: 84, h: 84 }
     ];
 
     function resetStars(){
@@ -461,25 +476,41 @@
       landingPulse = 0;
 
       coins = [];
-      obstacles = [];
+      monsters = [];
       particles = [];
       floatingTexts = [];
 
       coinSpawnTimer = 0.9;
-      obstacleSpawnTimer = 1.8;
-      nextObstacleMinGap = 0;
+      monsterSpawnTimer = 2.2;
+      minMonsterGapPx = 0;
 
       player.y = groundY - player.h;
       player.vy = 0;
       player.grounded = true;
       player.rotation = 0;
       player.trail = [];
+      player.jumpsLeft = 2;
 
       scoreEl.textContent = "0";
       collectedEl.textContent = "0";
       speedEl.textContent = "1.0x";
+      jumpsEl.textContent = "2";
       copyNote.textContent = "";
       resetStars();
+    }
+
+    async function startMusic(){
+      try{
+        bgMusic.volume = 0.35;
+        await bgMusic.play();
+      } catch (e) {
+        console.warn("music.mp3 could not autoplay.");
+      }
+    }
+
+    function stopMusic(){
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
     }
 
     function startGame(){
@@ -489,12 +520,14 @@
       endScreen.classList.add("hidden");
       lastTime = performance.now();
       cancelAnimationFrame(animationId);
+      startMusic();
       animationId = requestAnimationFrame(loop);
     }
 
     function endGame(){
       running = false;
       cancelAnimationFrame(animationId);
+      stopMusic();
 
       const status =
         score >= 6000 ? "DOMINANT" :
@@ -518,9 +551,11 @@
 
     function jump(){
       if(!running) return;
-      if(player.grounded){
+      if(player.jumpsLeft > 0){
         player.vy = player.jumpPower;
         player.grounded = false;
+        player.jumpsLeft--;
+        jumpsEl.textContent = String(player.jumpsLeft);
         addParticles(player.x + player.w * 0.35, player.y + player.h, "#9b5cff", "#c084fc", 18);
       }
     }
@@ -536,27 +571,35 @@
       });
     }
 
-    function canSpawnObstacle(){
-      if(obstacles.length === 0) return true;
-      const lastObstacle = obstacles[obstacles.length - 1];
-      return (W - lastObstacle.x) >= nextObstacleMinGap;
+    function fairToSpawnMonster(){
+      if(monsters.length === 0) return true;
+      const lastMonster = monsters[monsters.length - 1];
+      return (W - lastMonster.x) >= minMonsterGapPx;
     }
 
-    function spawnObstacle(){
-      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-      obstacles.push({
+    function spawnMonster(){
+      const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+      const monster = {
         x: W + 60,
-        y: groundY - type.h,
+        y: groundY - type.h + 4,
         w: type.w,
         h: type.h,
-        text: type.text,
+        name: type.name,
+        img: type.img,
         c1: type.c1,
         c2: type.c2
-      });
+      };
+      monsters.push(monster);
 
-      const runSpeed = 390 * speed;
-      const minTimeGap = 1.15;
-      nextObstacleMinGap = runSpeed * minTimeGap;
+      const runSpeed = 385 * speed;
+      const jumpWindow = 1.45;
+      minMonsterGapPx = runSpeed * jumpWindow + monster.w;
+
+      if(Math.random() < 0.55){
+        const bonusCoinX = monster.x + monster.w * 0.5;
+        const bonusCoinY = groundY - 190 - Math.random() * 55;
+        spawnCoin(bonusCoinX, bonusCoinY);
+      }
     }
 
     function addParticles(x, y, c1, c2, count = 12){
@@ -577,11 +620,13 @@
     }
 
     function rectsCollide(a, b){
+      const paddingX = 10;
+      const paddingY = 8;
       return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.y + a.h > b.y
+        a.x + paddingX < b.x + b.w - paddingX &&
+        a.x + a.w - paddingX > b.x + paddingX &&
+        a.y + paddingY < b.y + b.h - paddingY &&
+        a.y + a.h - paddingY > b.y + paddingY
       );
     }
 
@@ -616,6 +661,8 @@
         player.vy = 0;
         player.grounded = true;
         player.rotation = 0;
+        player.jumpsLeft = 2;
+        jumpsEl.textContent = "2";
       }
 
       player.trail.push({
@@ -627,19 +674,19 @@
       for(const t of player.trail) t.life--;
 
       coinSpawnTimer -= dt;
-      obstacleSpawnTimer -= dt;
+      monsterSpawnTimer -= dt;
 
       if(coinSpawnTimer <= 0){
         spawnCoin();
-        if(Math.random() < 0.35){
+        if(Math.random() < 0.30){
           spawnCoin(W + 150, groundY - 155 - Math.random() * 80);
         }
-        coinSpawnTimer = Math.max(0.75, 1.1 - gameTime * 0.01);
+        coinSpawnTimer = Math.max(0.78, 1.12 - gameTime * 0.01);
       }
 
-      if(obstacleSpawnTimer <= 0 && canSpawnObstacle()){
-        spawnObstacle();
-        obstacleSpawnTimer = Math.max(1.15, 1.65 - gameTime * 0.01);
+      if(monsterSpawnTimer <= 0 && fairToSpawnMonster()){
+        spawnMonster();
+        monsterSpawnTimer = Math.max(1.65, 2.15 - gameTime * 0.01);
       }
 
       for(const s of stars){
@@ -663,8 +710,8 @@
         coin.rot += coin.vr * dt;
       }
 
-      for(const o of obstacles){
-        o.x -= 390 * dt * speed;
+      for(const m of monsters){
+        m.x -= 385 * dt * speed;
       }
 
       for(let i = coins.length - 1; i >= 0; i--){
@@ -683,16 +730,16 @@
         if(c.x + c.w < -50) coins.splice(i, 1);
       }
 
-      for(let i = obstacles.length - 1; i >= 0; i--){
-        const o = obstacles[i];
-        if(rectsCollide(player, o)){
+      for(let i = monsters.length - 1; i >= 0; i--){
+        const m = monsters[i];
+        if(rectsCollide(player, m)){
           shake = 14;
           hitFlash = 1;
-          addParticles(player.x + player.w/2, player.y + player.h/2, o.c1, o.c2, 24);
+          addParticles(player.x + player.w/2, player.y + player.h/2, m.c1, m.c2, 24);
           endGame();
           return;
         }
-        if(o.x + o.w < -60) obstacles.splice(i, 1);
+        if(m.x + m.w < -80) monsters.splice(i, 1);
       }
 
       for(let i = particles.length - 1; i >= 0; i--){
@@ -878,40 +925,27 @@
       }
     }
 
-    function roundRect(x, y, w, h, r){
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-    }
-
-    function drawObstacles(){
-      for(const o of obstacles){
+    function drawMonsters(){
+      for(const m of monsters){
         ctx.save();
 
-        const grad = ctx.createLinearGradient(o.x, o.y, o.x + o.w, o.y + o.h);
-        grad.addColorStop(0, o.c1);
-        grad.addColorStop(1, o.c2);
-
-        ctx.shadowBlur = 24;
-        ctx.shadowColor = o.c1;
+        const grad = ctx.createRadialGradient(m.x + m.w/2, m.y + m.h/2, 10, m.x + m.w/2, m.y + m.h/2, m.w * 0.9);
+        grad.addColorStop(0, hexToRgba(m.c1, 0.18));
+        grad.addColorStop(1, hexToRgba(m.c2, 0));
         ctx.fillStyle = grad;
-        roundRect(o.x, o.y, o.w, o.h, 14);
+        ctx.beginPath();
+        ctx.arc(m.x + m.w/2, m.y + m.h/2, m.w * 0.7, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.strokeStyle = "rgba(255,255,255,.18)";
-        ctx.lineWidth = 1;
-        roundRect(o.x, o.y, o.w, o.h, 14);
-        ctx.stroke();
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = m.c1;
 
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = `900 ${o.text === "DEAD POOL" ? 14 : 18}px Inter, Arial`;
-        ctx.fillText(o.text, o.x + o.w/2, o.y + o.h/2 + 1);
+        if(m.img.complete && m.img.naturalWidth > 0){
+          ctx.drawImage(m.img, m.x, m.y, m.w, m.h);
+        } else {
+          ctx.fillStyle = m.c1;
+          ctx.fillRect(m.x, m.y, m.w, m.h);
+        }
 
         ctx.restore();
       }
@@ -954,7 +988,7 @@
       drawBackground();
       drawGround();
       drawCoins();
-      drawObstacles();
+      drawMonsters();
       drawPlayer();
       drawParticles();
       drawFloatingTexts();
@@ -982,14 +1016,18 @@
       return `rgba(${r},${g},${b},${alpha})`;
     }
 
+    function triggerJump(){
+      jump();
+    }
+
     window.addEventListener("keydown", (e) => {
       if(e.code === "Space" || e.code === "ArrowUp" || e.key.toLowerCase() === "w"){
         e.preventDefault();
-        jump();
+        triggerJump();
       }
     });
 
-    canvas.addEventListener("pointerdown", () => jump());
+    canvas.addEventListener("pointerdown", () => triggerJump());
 
     startBtn.addEventListener("click", startGame);
     restartBtn.addEventListener("click", startGame);
@@ -1018,10 +1056,6 @@ $ASTY
         copyNote.textContent = "Copy failed. Please copy manually.";
       }
     });
-
-    logo.onerror = () => {
-      console.warn("assets/logo.png not found.");
-    };
 
     resize();
     resetGame();
