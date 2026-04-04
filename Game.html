@@ -376,7 +376,7 @@
         <div class="pill">ASTY ARCADE MODE</div>
         <h1>ASTY Runner</h1>
         <p>
-          Collect ASTY coins, use the long upper plateaus, survive the monsters and let the shield absorb up to 3 hits.
+          Collect ASTY coins, use the long upper plateaus, pick up extra shields, smash through walls and survive the monsters.
         </p>
         <div class="buttons">
           <button class="btn btn-primary" id="startBtn">START RUN</button>
@@ -474,6 +474,7 @@
     let collectFlash = 0;
     let hitFlash = 0;
     let shieldFlash = 0;
+    let wallFlash = 0;
     let shake = 0;
     let landingPulse = 0;
 
@@ -482,12 +483,16 @@
     let coins = [];
     let monsters = [];
     let platforms = [];
+    let shields = [];
+    let walls = [];
     let particles = [];
     let floatingTexts = [];
 
     let coinSpawnTimer = 0;
     let monsterSpawnTimer = 0;
     let platformSpawnTimer = 0;
+    let shieldSpawnTimer = 0;
+    let wallSpawnTimer = 0;
     let minMonsterGapPx = 0;
 
     const player = {
@@ -501,6 +506,7 @@
       grounded: true,
       rotation: 0,
       trail: [],
+      glowTrail: [],
       jumpsLeft: 2,
       shields: 3,
       onPlatform: null
@@ -555,18 +561,23 @@
       collectFlash = 0;
       hitFlash = 0;
       shieldFlash = 0;
+      wallFlash = 0;
       shake = 0;
       landingPulse = 0;
 
       coins = [];
       monsters = [];
       platforms = [];
+      shields = [];
+      walls = [];
       particles = [];
       floatingTexts = [];
 
       coinSpawnTimer = 1.0;
       monsterSpawnTimer = 2.8;
       platformSpawnTimer = 1.4;
+      shieldSpawnTimer = 6.0;
+      wallSpawnTimer = 4.4;
       minMonsterGapPx = 0;
 
       player.y = groundAt(player.x) - player.h;
@@ -574,6 +585,7 @@
       player.grounded = true;
       player.rotation = 0;
       player.trail = [];
+      player.glowTrail = [];
       player.jumpsLeft = 2;
       player.shields = 3;
       player.onPlatform = null;
@@ -618,9 +630,9 @@
       stopMusic();
 
       const status =
-        score >= 6500 ? "DOMINANT" :
-        score >= 3500 ? "ACTIVE" :
-        score >= 1600 ? "STABLE" :
+        score >= 7000 ? "DOMINANT" :
+        score >= 3800 ? "ACTIVE" :
+        score >= 1800 ? "STABLE" :
         "WARM";
 
       finalScore.textContent = Math.floor(score).toLocaleString();
@@ -658,6 +670,28 @@
         h: 38 + Math.random() * 8,
         rot: Math.random() * Math.PI * 2,
         vr: (Math.random() - 0.5) * 3
+      });
+    }
+
+    function spawnShieldPickup(){
+      shields.push({
+        x: W + 60,
+        y: groundAt(W + 60) - 150 - Math.random() * 60,
+        w: 40,
+        h: 40,
+        pulse: Math.random() * Math.PI * 2
+      });
+    }
+
+    function spawnWall(){
+      const w = 32 + Math.random() * 10;
+      const h = 110 + Math.random() * 25;
+      walls.push({
+        x: W + 60,
+        y: groundAt(W + 60) - h + 10,
+        w, h,
+        c1: "#7c3aed",
+        c2: "#c084fc"
       });
     }
 
@@ -754,6 +788,7 @@
       collectFlash *= 0.9;
       hitFlash *= 0.88;
       shieldFlash *= 0.9;
+      wallFlash *= 0.9;
       shake *= 0.88;
       landingPulse *= 0.86;
 
@@ -815,9 +850,20 @@
       if(player.trail.length > 10) player.trail.shift();
       for(const t of player.trail) t.life--;
 
+      player.glowTrail.push({
+        x: player.x + player.w/2,
+        y: player.y + player.h/2,
+        r: 22 + Math.random() * 6,
+        life: 20
+      });
+      if(player.glowTrail.length > 14) player.glowTrail.shift();
+      for(const g of player.glowTrail) g.life--;
+
       coinSpawnTimer -= dt;
       monsterSpawnTimer -= dt;
       platformSpawnTimer -= dt;
+      shieldSpawnTimer -= dt;
+      wallSpawnTimer -= dt;
 
       if(coinSpawnTimer <= 0){
         spawnCoin();
@@ -837,6 +883,20 @@
       if(monsterSpawnTimer <= 0 && fairToSpawnMonster()){
         spawnMonster();
         monsterSpawnTimer = Math.max(2.5, 3.2 - gameTime * 0.004);
+      }
+
+      if(shieldSpawnTimer <= 0){
+        if(player.shields < 3 && Math.random() < 0.8){
+          spawnShieldPickup();
+        }
+        shieldSpawnTimer = 7.5;
+      }
+
+      if(wallSpawnTimer <= 0){
+        if(Math.random() < 0.65){
+          spawnWall();
+        }
+        wallSpawnTimer = Math.max(4.6, 5.6 - gameTime * 0.003);
       }
 
       for(const s of stars){
@@ -860,6 +920,11 @@
         coin.rot += coin.vr * dt;
       }
 
+      for(const s of shields){
+        s.x -= 280 * dt * speed;
+        s.pulse += dt * 5;
+      }
+
       for(const p of platforms){
         p.x -= 250 * dt * speed;
       }
@@ -867,6 +932,11 @@
       for(const m of monsters){
         m.x -= 330 * dt * speed;
         m.y = groundAt(m.x) - m.h + 6;
+      }
+
+      for(const w of walls){
+        w.x -= 320 * dt * speed;
+        w.y = groundAt(w.x) - w.h + 8;
       }
 
       for(let i = coins.length - 1; i >= 0; i--){
@@ -885,9 +955,38 @@
         if(c.x + c.w < -60) coins.splice(i, 1);
       }
 
+      for(let i = shields.length - 1; i >= 0; i--){
+        const s = shields[i];
+        if(rectsCollide(player, s)){
+          player.shields = Math.min(3, player.shields + 1);
+          shieldEl.textContent = String(player.shields);
+          shieldFlash = 1;
+          addParticles(s.x + s.w/2, s.y + s.h/2, "#7dd3fc", "#ffffff", 18);
+          addFloatingText(s.x, s.y, "+SHIELD");
+          shields.splice(i, 1);
+          continue;
+        }
+        if(s.x + s.w < -60) shields.splice(i, 1);
+      }
+
       for(let i = platforms.length - 1; i >= 0; i--){
         const p = platforms[i];
         if(p.x + p.w < -140) platforms.splice(i, 1);
+      }
+
+      for(let i = walls.length - 1; i >= 0; i--){
+        const w = walls[i];
+        if(rectsCollide(player, w)){
+          wallFlash = 1;
+          shake = 8;
+          score += 80;
+          scoreEl.textContent = Math.floor(score).toLocaleString();
+          addParticles(player.x + player.w/2, player.y + player.h/2, w.c1, w.c2, 26);
+          addFloatingText(w.x, w.y, "BREAK");
+          walls.splice(i, 1);
+          continue;
+        }
+        if(w.x + w.w < -90) walls.splice(i, 1);
       }
 
       for(let i = monsters.length - 1; i >= 0; i--){
@@ -972,6 +1071,11 @@
         ctx.fillStyle = `rgba(125,211,252,${shieldFlash * 0.08})`;
         ctx.fillRect(0,0,W,H);
       }
+
+      if(wallFlash > 0.01){
+        ctx.fillStyle = `rgba(192,132,252,${wallFlash * 0.06})`;
+        ctx.fillRect(0,0,W,H);
+      }
     }
 
     function drawTerrain(){
@@ -1037,6 +1141,19 @@
       ctx.shadowBlur = 0;
     }
 
+    function drawGlowTrail(){
+      for(const g of player.glowTrail){
+        const alpha = Math.max(0, g.life / 20) * 0.28;
+        const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
+        grad.addColorStop(0, `rgba(192,132,252,${alpha})`);
+        grad.addColorStop(1, "rgba(192,132,252,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     function drawTrail(){
       for(const t of player.trail){
         const alpha = Math.max(0, t.life / 16) * 0.35;
@@ -1052,18 +1169,19 @@
       const y = player.y + player.h / 2;
       const size = player.w;
 
+      drawGlowTrail();
       drawTrail();
 
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(player.rotation);
 
-      ctx.shadowBlur = 30;
-      ctx.shadowColor = "rgba(155,92,255,.48)";
+      ctx.shadowBlur = 34;
+      ctx.shadowColor = "rgba(155,92,255,.52)";
 
       ctx.fillStyle = "rgba(155,92,255,.16)";
       ctx.beginPath();
-      ctx.arc(0, 0, size * 0.64, 0, Math.PI * 2);
+      ctx.arc(0, 0, size * 0.68, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "rgba(220,190,255,.45)";
@@ -1073,14 +1191,14 @@
       ctx.stroke();
 
       if(player.shields > 0){
-        ctx.strokeStyle = "rgba(125,211,252,.75)";
+        ctx.strokeStyle = "rgba(125,211,252,.80)";
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(0, 0, size * 0.7, -Math.PI/2, -Math.PI/2 + (Math.PI * 2) * (player.shields / 3));
+        ctx.arc(0, 0, size * 0.72, -Math.PI/2, -Math.PI/2 + (Math.PI * 2) * (player.shields / 3));
         ctx.stroke();
       }
 
-      ctx.strokeStyle = "rgba(124,58,237,.48)";
+      ctx.strokeStyle = "rgba(124,58,237,.58)";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
@@ -1116,6 +1234,67 @@
         }
         ctx.restore();
       }
+    }
+
+    function drawShieldPickups(){
+      for(const s of shields){
+        const pulse = 1 + Math.sin(s.pulse) * 0.08;
+        ctx.save();
+        ctx.translate(s.x + s.w/2, s.y + s.h/2);
+        ctx.scale(pulse, pulse);
+
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = "rgba(125,211,252,.65)";
+        ctx.fillStyle = "rgba(125,211,252,.18)";
+        ctx.beginPath();
+        ctx.arc(0, 0, s.w * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(125,211,252,.95)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, s.w * 0.34, -Math.PI/2, Math.PI/2);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255,255,255,.88)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-5, -2);
+        ctx.lineTo(5, -2);
+        ctx.moveTo(0, -7);
+        ctx.lineTo(0, 3);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    function drawWalls(){
+      for(const w of walls){
+        const grad = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y + w.h);
+        grad.addColorStop(0, "rgba(124,58,237,.98)");
+        grad.addColorStop(1, "rgba(192,132,252,.95)");
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = "rgba(192,132,252,.55)";
+        ctx.fillStyle = grad;
+        roundRect(w.x, w.y, w.w, w.h, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255,255,255,.25)";
+        ctx.lineWidth = 1;
+        roundRect(w.x, w.y, w.w, w.h, 8);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255,255,255,.18)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(w.x + 6, w.y + 18);
+        ctx.lineTo(w.x + w.w - 6, w.y + w.h - 18);
+        ctx.moveTo(w.x + w.w - 10, w.y + 24);
+        ctx.lineTo(w.x + 10, w.y + w.h - 24);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
     }
 
     function drawMonsters(){
@@ -1192,6 +1371,8 @@
       drawTerrain();
       drawPlatforms();
       drawCoins();
+      drawShieldPickups();
+      drawWalls();
       drawMonsters();
       drawPlayer();
       drawParticles();
@@ -1238,9 +1419,9 @@
 
     copyBtn.addEventListener("click", async () => {
       const status =
-        score >= 6500 ? "DOMINANT" :
-        score >= 3500 ? "ACTIVE" :
-        score >= 1600 ? "STABLE" :
+        score >= 7000 ? "DOMINANT" :
+        score >= 3800 ? "ACTIVE" :
+        score >= 1800 ? "STABLE" :
         "WARM";
 
       const text = `🟣 I survived the ASTY Runner.
