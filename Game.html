@@ -3,23 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ASTY Burn Reactor</title>
+  <title>ASTY Gate Runner</title>
   <style>
     :root{
-      --bg0:#05020a;
-      --bg1:#0b0613;
+      --bg0:#04020a;
+      --bg1:#0a0613;
       --bg2:#140a22;
-      --bg3:#23103a;
+      --bg3:#22103a;
       --p1:#7c3aed;
       --p2:#9b5cff;
       --p3:#c084fc;
-      --text:#faf7ff;
-      --soft:rgba(255,255,255,.72);
+      --white:#faf7ff;
+      --soft:rgba(255,255,255,.74);
       --border:rgba(220,190,255,.15);
       --glass:rgba(255,255,255,.08);
-      --danger:#ff5c7c;
-      --warn:#ffb14a;
-      --ok:#49f2b4;
+      --red:#ff5577;
+      --red2:#ff8a5c;
+      --green:#4ef2b3;
+      --orange:#ffb14a;
+      --goodBurn1:#ff8a5c;
+      --goodBurn2:#ff5577;
+      --goodRe1:#7c3aed;
+      --goodRe2:#c084fc;
+      --goodTre1:#14b87a;
+      --goodTre2:#4ef2b3;
+      --badSell1:#ff5577;
+      --badSell2:#ff7a90;
+      --badDump1:#ff8a5c;
+      --badDump2:#ffb14a;
+      --badDead1:#64748b;
+      --badDead2:#94a3b8;
     }
 
     *{
@@ -34,11 +47,11 @@
       height:100%;
       overflow:hidden;
       font-family:Inter, Arial, sans-serif;
-      color:var(--text);
+      color:var(--white);
       background:
-        radial-gradient(circle at 50% -10%, rgba(155,92,255,.26), transparent 34%),
-        radial-gradient(circle at 12% 85%, rgba(124,58,237,.10), transparent 28%),
-        linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 34%,var(--bg1) 68%,var(--bg0) 100%);
+        radial-gradient(circle at 50% -10%, rgba(155,92,255,.28), transparent 35%),
+        radial-gradient(circle at 10% 85%, rgba(124,58,237,.10), transparent 28%),
+        linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 32%,var(--bg1) 68%,var(--bg0) 100%);
     }
 
     body{
@@ -52,52 +65,50 @@
       width:min(100vw,520px);
       height:min(100vh,920px);
       overflow:hidden;
-      background:
-        radial-gradient(circle at 50% 15%, rgba(192,132,252,.10), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
       border-left:1px solid rgba(255,255,255,.08);
       border-right:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 50% 14%, rgba(192,132,252,.10), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
       box-shadow:
-        0 0 120px rgba(124,58,237,.16),
+        0 0 120px rgba(124,58,237,.18),
         inset 0 0 120px rgba(155,92,255,.05);
-      padding:14px;
     }
 
-    .bg-grid{
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      touch-action:none;
+    }
+
+    .hud{
       position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:.28;
-      background-image:
-        linear-gradient(rgba(192,132,252,.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(192,132,252,.06) 1px, transparent 1px);
-      background-size:34px 34px;
-      animation:gridDrift 7s linear infinite;
-    }
-
-    @keyframes gridDrift{
-      0%{ transform:translateY(0); }
-      100%{ transform:translateY(34px); }
-    }
-
-    .topbar{
-      position:relative;
-      z-index:3;
+      top:14px;
+      left:14px;
+      right:14px;
+      z-index:5;
       display:flex;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:14px;
+      pointer-events:none;
+    }
+
+    .hud-col{
+      display:flex;
+      gap:10px;
     }
 
     .card{
-      flex:1;
-      min-width:0;
+      min-width:104px;
       padding:10px 12px;
       border-radius:16px;
       border:1px solid var(--border);
       background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
       backdrop-filter:blur(10px);
-      box-shadow:0 10px 30px rgba(0,0,0,.22);
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.24),
+        inset 0 0 18px rgba(255,255,255,.02);
     }
 
     .label{
@@ -112,202 +123,42 @@
       font-size:24px;
       font-weight:1000;
       line-height:1;
-      text-shadow:0 0 14px rgba(192,132,252,.12);
+      text-shadow:0 0 18px rgba(192,132,252,.12);
     }
 
-    .center{
-      position:relative;
-      z-index:3;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      margin:6px 0 14px;
-    }
-
-    .reactor-shell{
-      position:relative;
-      width:min(72vw, 290px);
-      height:min(72vw, 290px);
-      max-width:290px;
-      max-height:290px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(192,132,252,.20), rgba(124,58,237,.06));
-      border:1px solid rgba(220,190,255,.16);
-      box-shadow:
-        0 0 34px rgba(155,92,255,.20),
-        0 0 100px rgba(155,92,255,.12),
-        inset 0 0 28px rgba(255,255,255,.03);
-    }
-
-    .reactor-ring{
+    .lane-indicator{
       position:absolute;
-      inset:14px;
-      border-radius:50%;
-      border:2px solid rgba(220,190,255,.18);
-      box-shadow:0 0 24px rgba(155,92,255,.12);
-      animation:spin 11s linear infinite;
-    }
-
-    .reactor-ring.r2{
-      inset:30px;
-      border-color:rgba(155,92,255,.20);
-      animation-direction:reverse;
-      animation-duration:16s;
-    }
-
-    @keyframes spin{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    .reactor-core{
-      position:relative;
-      width:120px;
-      height:120px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,.16), rgba(155,92,255,.10) 52%, rgba(124,58,237,.04) 100%);
-      box-shadow:
-        0 0 50px rgba(155,92,255,.32),
-        inset 0 0 24px rgba(255,255,255,.05);
-      transition:transform .08s linear;
-    }
-
-    .reactor-core::before{
-      content:"";
-      position:absolute;
-      inset:-16px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(192,132,252,.20), transparent 68%);
-      filter:blur(6px);
-      opacity:.75;
-      animation:pulse 1.7s ease-in-out infinite;
-    }
-
-    @keyframes pulse{
-      0%,100%{ transform:scale(1); opacity:.72; }
-      50%{ transform:scale(1.08); opacity:1; }
-    }
-
-    .reactor-core img{
-      width:58px;
-      height:58px;
-      object-fit:contain;
-      filter:drop-shadow(0 0 18px rgba(192,132,252,.40));
-      position:relative;
-      z-index:2;
-    }
-
-    .status-pill{
-      margin-top:12px;
+      top:92px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
       padding:8px 14px;
       border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      font-size:12px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      color:#efe7ff;
-      box-shadow:0 0 20px rgba(155,92,255,.10);
-    }
-
-    .meters{
-      position:relative;
-      z-index:3;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .meter-card{
-      padding:12px;
-      border-radius:18px;
-      border:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
-      box-shadow:0 10px 30px rgba(0,0,0,.20);
-    }
-
-    .meter-head{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-      font-size:14px;
-      font-weight:800;
-    }
-
-    .meter-track{
-      position:relative;
-      height:14px;
-      border-radius:999px;
-      overflow:hidden;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.05);
-    }
-
-    .meter-fill{
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:50%;
-      border-radius:999px;
-      transition:width .08s linear, background .12s linear, box-shadow .12s linear;
-      box-shadow:0 0 20px currentColor;
-    }
-
-    .controls{
-      position:relative;
-      z-index:3;
-      display:grid;
-      grid-template-columns:repeat(3, 1fr);
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .btn{
-      appearance:none;
-      border:none;
-      cursor:pointer;
-      padding:16px 12px;
-      border-radius:18px;
-      font-weight:1000;
+      border:1px solid rgba(220,190,255,.15);
+      background:rgba(8,6,14,.42);
       font-size:13px;
-      letter-spacing:.03em;
-      color:white;
-      transition:transform .08s ease, filter .08s ease;
-      box-shadow:0 12px 30px rgba(0,0,0,.20);
+      font-weight:900;
+      letter-spacing:.08em;
+      backdrop-filter:blur(8px);
+      pointer-events:none;
+      box-shadow:0 0 30px rgba(155,92,255,.10);
     }
 
-    .btn:hover{ transform:translateY(-1px); }
-    .btn:active{ transform:translateY(1px) scale(.995); }
-
-    .burn-btn{
-      background:linear-gradient(135deg, #ff7a59, #ff4d6d);
-    }
-
-    .reinvest-btn{
-      background:linear-gradient(135deg, #6d28d9, #9b5cff);
-    }
-
-    .treasury-btn{
-      background:linear-gradient(135deg, #14b87a, #49f2b4);
-      color:#08150f;
-    }
-
-    .tap-note{
-      position:relative;
-      z-index:3;
-      margin-top:12px;
-      text-align:center;
-      color:rgba(255,255,255,.70);
+    .bottom-note{
+      position:absolute;
+      bottom:18px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(5,5,10,.36);
+      color:rgba(255,255,255,.72);
       font-size:12px;
+      backdrop-filter:blur(8px);
+      white-space:nowrap;
+      pointer-events:none;
     }
 
     .overlay{
@@ -329,8 +180,8 @@
     .hidden{ display:none; }
 
     .logo-wrap{
-      width:112px;
-      height:112px;
+      width:118px;
+      height:118px;
       border-radius:50%;
       display:grid;
       place-items:center;
@@ -340,20 +191,21 @@
       border:1px solid rgba(220,190,255,.18);
       box-shadow:
         0 0 36px rgba(155,92,255,.24),
-        0 0 110px rgba(155,92,255,.16);
-      animation:logoPulse 2.2s infinite ease-in-out;
-    }
-
-    @keyframes logoPulse{
-      0%,100%{ transform:scale(1); }
-      50%{ transform:scale(1.06); }
+        0 0 110px rgba(155,92,255,.16),
+        inset 0 0 24px rgba(255,255,255,.03);
+      animation:pulse 2.2s infinite ease-in-out;
     }
 
     .logo-wrap img{
-      width:64px;
-      height:64px;
+      width:68px;
+      height:68px;
       object-fit:contain;
       filter:drop-shadow(0 0 18px rgba(192,132,252,.35));
+    }
+
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.07); }
     }
 
     .pill{
@@ -361,16 +213,16 @@
       border-radius:999px;
       border:1px solid var(--border);
       background:rgba(255,255,255,.06);
+      color:#efe7ff;
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:.12em;
-      color:#efe7ff;
       margin-bottom:14px;
     }
 
     h1{
       margin:0 0 8px;
-      font-size:clamp(30px, 7vw, 48px);
+      font-size:clamp(30px, 7vw, 50px);
       font-weight:1000;
       letter-spacing:.02em;
       text-shadow:0 0 26px rgba(155,92,255,.24);
@@ -385,13 +237,13 @@
     }
 
     .buttons{
-      width:min(100%, 300px);
+      width:min(100%,300px);
       display:flex;
       flex-direction:column;
       gap:10px;
     }
 
-    .action{
+    .btn,.btn-link{
       appearance:none;
       border:none;
       text-decoration:none;
@@ -405,22 +257,22 @@
       transition:.15s ease;
     }
 
-    .action:hover{ transform:translateY(-1px); }
-    .action:active{ transform:translateY(1px) scale(.995); }
+    .btn:hover,.btn-link:hover{ transform:translateY(-1px); }
+    .btn:active,.btn-link:active{ transform:translateY(1px) scale(.995); }
 
-    .primary{
+    .btn-primary{
       color:white;
       background:linear-gradient(135deg, #6d28d9, #9b5cff);
       box-shadow:0 14px 36px rgba(124,58,237,.34);
     }
 
-    .secondary{
+    .btn-secondary{
       color:#f5efff;
       background:rgba(255,255,255,.08);
       border:1px solid var(--border);
     }
 
-    .link{
+    .btn-link{
       display:flex;
       align-items:center;
       justify-content:center;
@@ -436,7 +288,9 @@
       border-radius:22px;
       background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
       border:1px solid var(--border);
-      box-shadow:0 12px 34px rgba(0,0,0,.24);
+      box-shadow:
+        0 12px 34px rgba(0,0,0,.24),
+        inset 0 0 18px rgba(255,255,255,.03);
       margin:10px 0 14px;
     }
 
@@ -465,90 +319,47 @@
     }
 
     @media (max-width:600px){
-      .app{
-        width:100vw;
-        height:100vh;
-      }
+      .app{ width:100vw; height:100vh; }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="bg-grid"></div>
+    <canvas id="game"></canvas>
 
-    <div class="topbar">
-      <div class="card">
-        <div class="label">Survival</div>
-        <div class="value" id="timeEl">0.0s</div>
-      </div>
-      <div class="card">
-        <div class="label">Stability</div>
-        <div class="value" id="stabilityEl">100%</div>
-      </div>
-    </div>
-
-    <div class="center">
-      <div class="reactor-shell">
-        <div class="reactor-ring"></div>
-        <div class="reactor-ring r2"></div>
-        <div class="reactor-core" id="reactorCore">
-          <img src="assets/logo.png" alt="ASTY Logo" />
+    <div class="hud">
+      <div class="hud-col">
+        <div class="card">
+          <div class="label">Score</div>
+          <div class="value" id="scoreEl">0</div>
+        </div>
+        <div class="card">
+          <div class="label">Combo</div>
+          <div class="value" id="comboEl">x1</div>
         </div>
       </div>
-      <div class="status-pill" id="statusPill">SYSTEM STABLE</div>
-    </div>
-
-    <div class="meters">
-      <div class="meter-card">
-        <div class="meter-head">
-          <span>🔥 Burn</span>
-          <strong id="burnValue">72%</strong>
-        </div>
-        <div class="meter-track">
-          <div class="meter-fill" id="burnFill"></div>
-        </div>
-      </div>
-
-      <div class="meter-card">
-        <div class="meter-head">
-          <span>📈 Reinvest</span>
-          <strong id="reinvestValue">68%</strong>
-        </div>
-        <div class="meter-track">
-          <div class="meter-fill" id="reinvestFill"></div>
-        </div>
-      </div>
-
-      <div class="meter-card">
-        <div class="meter-head">
-          <span>🏦 Treasury</span>
-          <strong id="treasuryValue">74%</strong>
-        </div>
-        <div class="meter-track">
-          <div class="meter-fill" id="treasuryFill"></div>
+      <div class="hud-col">
+        <div class="card">
+          <div class="label">Speed</div>
+          <div class="value" id="speedEl">1.0x</div>
         </div>
       </div>
     </div>
 
-    <div class="controls">
-      <button class="btn burn-btn" id="burnBtn">BOOST BURN</button>
-      <button class="btn reinvest-btn" id="reinvestBtn">BOOST REINVEST</button>
-      <button class="btn treasury-btn" id="treasuryBtn">BOOST TREASURY</button>
-    </div>
-
-    <div class="tap-note">Keep all systems balanced. Too low or too high and the reactor collapses.</div>
+    <div class="lane-indicator" id="laneIndicator">LANE CENTER</div>
+    <div class="bottom-note">A/D or ◀/▶. On mobile tap left, center or right.</div>
 
     <div class="overlay" id="startScreen">
       <div class="logo-wrap">
         <img src="assets/logo.png" alt="ASTY Logo" />
       </div>
       <div class="pill">ASTY ARCADE MODE</div>
-      <h1>Burn Reactor</h1>
+      <h1>ASTY Gate Runner</h1>
       <p>
-        Hold Burn, Reinvest and Treasury in the safe zone. Push the right system at the right moment and survive the pressure.
+        Choose the right path. Fly through BURN, REINVEST and TREASURY. Avoid SELL, DUMP and DEAD POOL.
       </p>
       <div class="buttons">
-        <button class="action primary" id="startBtn">START REACTOR</button>
+        <button class="btn btn-primary" id="startBtn">ENTER THE LOOP</button>
       </div>
     </div>
 
@@ -557,21 +368,21 @@
         <img src="assets/logo.png" alt="ASTY Logo" />
       </div>
       <div class="pill">SYSTEM RESULT</div>
-      <h1 style="font-size:clamp(28px, 6vw, 42px)">Reactor Offline</h1>
-      <p id="resultText">The system measured your pressure tolerance.</p>
+      <h1 style="font-size:clamp(28px, 6vw, 42px)">Run Ended</h1>
+      <p id="resultText">The system measured your route precision.</p>
 
       <div class="result-card">
         <div class="result-title">🟣 ASTY SYSTEM RESULT</div>
+        <div class="line"><span>Score</span><strong id="finalScore">0</strong></div>
+        <div class="line"><span>Best Combo</span><strong id="finalCombo">x1</strong></div>
         <div class="line"><span>Survival</span><strong id="finalTime">0.0s</strong></div>
-        <div class="line"><span>Peak Stability</span><strong id="finalPeak">100%</strong></div>
-        <div class="line"><span>Failure Mode</span><strong id="finalReason">BURN LOW</strong></div>
         <div class="line"><span>Loop Status</span><strong id="finalStatus">ACTIVE</strong></div>
       </div>
 
       <div class="buttons">
-        <button class="action secondary" id="copyBtn">COPY RESULT</button>
-        <a class="action link" href="https://htmlpreview.github.io/?https://github.com/ArbStrategy-ASTY/ArbStrategy-ASTY/blob/main/pools.html" target="_blank" rel="noopener noreferrer">ACTIVATE THE LOOP</a>
-        <button class="action primary" id="restartBtn">RESTART REACTOR</button>
+        <button class="btn btn-secondary" id="copyBtn">COPY RESULT</button>
+        <a class="btn-link" href="https://htmlpreview.github.io/?https://github.com/ArbStrategy-ASTY/ArbStrategy-ASTY/blob/main/pools.html" target="_blank" rel="noopener noreferrer">ACTIVATE THE LOOP</a>
+        <button class="btn btn-primary" id="restartBtn">RUN AGAIN</button>
       </div>
 
       <div class="copy-note" id="copyNote"></div>
@@ -579,22 +390,13 @@
   </div>
 
   <script>
-    const burnFill = document.getElementById("burnFill");
-    const reinvestFill = document.getElementById("reinvestFill");
-    const treasuryFill = document.getElementById("treasuryFill");
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
 
-    const burnValue = document.getElementById("burnValue");
-    const reinvestValue = document.getElementById("reinvestValue");
-    const treasuryValue = document.getElementById("treasuryValue");
-
-    const burnBtn = document.getElementById("burnBtn");
-    const reinvestBtn = document.getElementById("reinvestBtn");
-    const treasuryBtn = document.getElementById("treasuryBtn");
-
-    const timeEl = document.getElementById("timeEl");
-    const stabilityEl = document.getElementById("stabilityEl");
-    const statusPill = document.getElementById("statusPill");
-    const reactorCore = document.getElementById("reactorCore");
+    const scoreEl = document.getElementById("scoreEl");
+    const comboEl = document.getElementById("comboEl");
+    const speedEl = document.getElementById("speedEl");
+    const laneIndicator = document.getElementById("laneIndicator");
 
     const startScreen = document.getElementById("startScreen");
     const endScreen = document.getElementById("endScreen");
@@ -603,221 +405,516 @@
     const copyBtn = document.getElementById("copyBtn");
     const copyNote = document.getElementById("copyNote");
 
+    const finalScore = document.getElementById("finalScore");
+    const finalCombo = document.getElementById("finalCombo");
     const finalTime = document.getElementById("finalTime");
-    const finalPeak = document.getElementById("finalPeak");
-    const finalReason = document.getElementById("finalReason");
     const finalStatus = document.getElementById("finalStatus");
     const resultText = document.getElementById("resultText");
 
+    const logo = new Image();
+    logo.src = "assets/logo.png";
+
+    let W = 0, H = 0;
+    let DPR = Math.max(1, window.devicePixelRatio || 1);
+
+    function resize(){
+      const app = document.querySelector(".app");
+      W = app.clientWidth;
+      H = app.clientHeight;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
     let running = false;
-    let raf = null;
-    let last = 0;
+    let animationId = null;
+    let lastTime = 0;
+    let gameTime = 0;
+    let score = 0;
+    let combo = 1;
+    let bestCombo = 1;
+    let speed = 1;
+    let shake = 0;
+    let flashGood = 0;
+    let flashBad = 0;
+    let gateTimer = 0;
+    let gates = [];
+    let particles = [];
+    let floatingTexts = [];
+    let stars = [];
 
-    let burn = 72;
-    let reinvest = 68;
-    let treasury = 74;
+    const laneCount = 3;
+    let laneX = [];
+    function computeLanes(){
+      laneX = [W * 0.22, W * 0.5, W * 0.78];
+    }
+    computeLanes();
 
-    let time = 0;
-    let peakStability = 100;
-    let failureReason = "BURN LOW";
+    const player = {
+      lane: 1,
+      x: 0,
+      y: 0,
+      size: 64
+    };
 
-    function resetGame() {
-      burn = 72;
-      reinvest = 68;
-      treasury = 74;
-      time = 0;
-      peakStability = 100;
-      failureReason = "BURN LOW";
+    const GOOD_TYPES = [
+      { key: "BURN", colors: ["#ff8a5c", "#ff5577"], good: true },
+      { key: "REINVEST", colors: ["#7c3aed", "#c084fc"], good: true },
+      { key: "TREASURY", colors: ["#14b87a", "#4ef2b3"], good: true }
+    ];
+
+    const BAD_TYPES = [
+      { key: "SELL", colors: ["#ff5577", "#ff7a90"], good: false },
+      { key: "DUMP", colors: ["#ff8a5c", "#ffb14a"], good: false },
+      { key: "DEAD POOL", colors: ["#64748b", "#94a3b8"], good: false }
+    ];
+
+    function resetStars(){
+      stars = Array.from({length: 70}, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.8 + 0.5,
+        s: Math.random() * 90 + 50
+      }));
+    }
+
+    function resetGame(){
+      gameTime = 0;
+      score = 0;
+      combo = 1;
+      bestCombo = 1;
+      speed = 1;
+      shake = 0;
+      flashGood = 0;
+      flashBad = 0;
+      gateTimer = 0.9;
+      gates = [];
+      particles = [];
+      floatingTexts = [];
+      player.lane = 1;
+      player.x = laneX[player.lane];
+      player.y = H - 120;
+      scoreEl.textContent = "0";
+      comboEl.textContent = "x1";
+      speedEl.textContent = "1.0x";
+      laneIndicator.textContent = "LANE CENTER";
       copyNote.textContent = "";
-      updateUI();
+      resetStars();
     }
 
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
+    function randomItem(arr){
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function avg() {
-      return (burn + reinvest + treasury) / 3;
-    }
+    function spawnGateRow(){
+      const goodLane = Math.floor(Math.random() * laneCount);
+      const lanes = [];
 
-    function spread() {
-      return Math.max(burn, reinvest, treasury) - Math.min(burn, reinvest, treasury);
-    }
-
-    function stability() {
-      const a = avg();
-      const s = spread();
-      const centered = 100 - Math.abs(a - 70) * 2.2;
-      const balanced = 100 - s * 1.3;
-      return clamp((centered * 0.55 + balanced * 0.45), 0, 100);
-    }
-
-    function getMeterColor(v, type) {
-      if (v < 20) return "linear-gradient(90deg, #ff4d6d, #ff7a59)";
-      if (v > 92) return "linear-gradient(90deg, #ffb14a, #ffd86b)";
-      if (type === "burn") return "linear-gradient(90deg, #ff7a59, #ff4d6d)";
-      if (type === "reinvest") return "linear-gradient(90deg, #7c3aed, #c084fc)";
-      return "linear-gradient(90deg, #14b87a, #49f2b4)";
-    }
-
-    function updateBar(fill, label, value, type) {
-      fill.style.width = value + "%";
-      fill.style.background = getMeterColor(value, type);
-      fill.style.color = value < 20 ? "#ff5c7c" : value > 92 ? "#ffd86b" : "#c084fc";
-      label.textContent = Math.round(value) + "%";
-    }
-
-    function updateStatus(stab) {
-      let text = "SYSTEM STABLE";
-      if (stab >= 85) text = "PEAK EFFICIENCY";
-      else if (stab >= 65) text = "SYSTEM STABLE";
-      else if (stab >= 45) text = "PRESSURE RISING";
-      else text = "CRITICAL LOAD";
-      statusPill.textContent = text;
-
-      const scale = 1 + (stab / 100) * 0.05;
-      reactorCore.style.transform = `scale(${scale})`;
-      reactorCore.style.boxShadow =
-        `0 0 ${20 + stab * 0.4}px rgba(155,92,255,.34), inset 0 0 24px rgba(255,255,255,.05)`;
-    }
-
-    function updateUI() {
-      updateBar(burnFill, burnValue, burn, "burn");
-      updateBar(reinvestFill, reinvestValue, reinvest, "reinvest");
-      updateBar(treasuryFill, treasuryValue, treasury, "treasury");
-
-      const stab = stability();
-      stabilityEl.textContent = Math.round(stab) + "%";
-      timeEl.textContent = time.toFixed(1) + "s";
-      updateStatus(stab);
-
-      if (stab > peakStability) peakStability = stab;
-    }
-
-    function boost(which) {
-      if (!running) return;
-
-      if (which === "burn") {
-        burn += 13;
-        reinvest -= 2.8;
-        treasury -= 1.6;
+      for(let i = 0; i < laneCount; i++){
+        if(i === goodLane){
+          lanes.push(randomItem(GOOD_TYPES));
+        } else {
+          lanes.push(randomItem(BAD_TYPES));
+        }
       }
 
-      if (which === "reinvest") {
-        reinvest += 13;
-        burn -= 2.0;
-        treasury -= 2.2;
-      }
-
-      if (which === "treasury") {
-        treasury += 13;
-        burn -= 1.7;
-        reinvest -= 2.6;
-      }
-
-      burn = clamp(burn, 0, 110);
-      reinvest = clamp(reinvest, 0, 110);
-      treasury = clamp(treasury, 0, 110);
-
-      updateUI();
-      checkFailure();
+      gates.push({
+        z: 1,
+        passed: false,
+        lanes
+      });
     }
 
-    function checkFailure() {
-      if (burn <= 0) failureReason = "BURN LOW";
-      else if (reinvest <= 0) failureReason = "REINVEST LOW";
-      else if (treasury <= 0) failureReason = "TREASURY LOW";
-      else if (burn >= 100) failureReason = "BURN OVERLOAD";
-      else if (reinvest >= 100) failureReason = "REINVEST OVERLOAD";
-      else if (treasury >= 100) failureReason = "TREASURY OVERLOAD";
-      else return;
-
-      endGame();
+    function addParticles(x, y, colorA, colorB, count = 18){
+      for(let i = 0; i < count; i++){
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 18 + Math.random() * 20,
+          size: 2 + Math.random() * 4,
+          c1: colorA,
+          c2: colorB
+        });
+      }
     }
 
-    function tick(dt) {
-      time += dt;
-
-      const pressure = 1 + time * 0.08;
-
-      burn -= dt * (4.6 + Math.sin(time * 1.35) * 0.9 + pressure * 0.55);
-      reinvest -= dt * (4.1 + Math.cos(time * 1.1) * 0.8 + pressure * 0.50);
-      treasury -= dt * (3.8 + Math.sin(time * 0.9 + 1.4) * 0.7 + pressure * 0.45);
-
-      if (time > 8) {
-        const surge = (Math.sin(time * 1.8) + 1) * 0.55;
-        burn -= surge * dt * 1.4;
-      }
-
-      if (time > 14) {
-        reinvest -= (Math.cos(time * 2.2) + 1) * 0.45 * dt * 1.3;
-      }
-
-      if (time > 20) {
-        treasury -= (Math.sin(time * 2.6 + 2) + 1) * 0.40 * dt * 1.4;
-      }
-
-      burn = clamp(burn, 0, 110);
-      reinvest = clamp(reinvest, 0, 110);
-      treasury = clamp(treasury, 0, 110);
-
-      updateUI();
-      checkFailure();
+    function addFloatingText(x, y, text, good = true){
+      floatingTexts.push({
+        x, y, text,
+        life: 38,
+        good
+      });
     }
 
-    function loop(ts) {
-      if (!running) return;
-      const dt = Math.min(0.05, (ts - last) / 1000);
-      last = ts;
-
-      tick(dt);
-
-      if (running) raf = requestAnimationFrame(loop);
-    }
-
-    function startGame() {
+    function startGame(){
       resetGame();
       running = true;
       startScreen.classList.add("hidden");
       endScreen.classList.add("hidden");
-      last = performance.now();
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(loop);
+      lastTime = performance.now();
+      cancelAnimationFrame(animationId);
+      animationId = requestAnimationFrame(loop);
     }
 
-    function endGame() {
+    function endGame(){
       running = false;
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(animationId);
 
       const status =
-        time >= 35 ? "DOMINANT" :
-        time >= 24 ? "ACTIVE" :
-        time >= 14 ? "STABLE" :
+        score >= 7000 ? "DOMINANT" :
+        score >= 4000 ? "ACTIVE" :
+        score >= 1800 ? "STABLE" :
         "WARM";
 
-      finalTime.textContent = time.toFixed(1) + "s";
-      finalPeak.textContent = Math.round(peakStability) + "%";
-      finalReason.textContent = failureReason;
+      finalScore.textContent = Math.floor(score).toLocaleString();
+      finalCombo.textContent = "x" + bestCombo;
+      finalTime.textContent = gameTime.toFixed(1) + "s";
       finalStatus.textContent = status;
 
       resultText.textContent =
-        status === "DOMINANT" ? "The system recognizes your pressure control."
-        : status === "ACTIVE" ? "Strong reactor management detected."
-        : status === "STABLE" ? "The loop remained operational."
+        status === "DOMINANT" ? "The system recognizes your route efficiency."
+        : status === "ACTIVE" ? "Strong participation detected."
+        : status === "STABLE" ? "The loop remained intact."
         : "The system requires more precision.";
 
       endScreen.classList.remove("hidden");
     }
 
-    burnBtn.addEventListener("click", () => boost("burn"));
-    reinvestBtn.addEventListener("click", () => boost("reinvest"));
-    treasuryBtn.addEventListener("click", () => boost("treasury"));
+    function setLane(index){
+      player.lane = Math.max(0, Math.min(laneCount - 1, index));
+      const names = ["LEFT", "CENTER", "RIGHT"];
+      laneIndicator.textContent = "LANE " + names[player.lane];
+    }
+
+    function update(dt){
+      gameTime += dt;
+      speed = 1 + gameTime * 0.06;
+      shake *= 0.88;
+      flashGood *= 0.9;
+      flashBad *= 0.9;
+
+      player.x += (laneX[player.lane] - player.x) * Math.min(1, dt * 14);
+
+      score += dt * (45 + combo * 2.5);
+      scoreEl.textContent = Math.floor(score).toLocaleString();
+      comboEl.textContent = "x" + combo;
+      speedEl.textContent = speed.toFixed(1) + "x";
+
+      gateTimer -= dt;
+      if(gateTimer <= 0){
+        spawnGateRow();
+        gateTimer = Math.max(0.68, 1.1 - gameTime * 0.015);
+      }
+
+      for(const s of stars){
+        s.y += s.s * dt * speed;
+        if(s.y > H){
+          s.y = -4;
+          s.x = Math.random() * W;
+        }
+      }
+
+      for(const gate of gates){
+        gate.z -= dt * 0.62 * speed;
+      }
+
+      for(let i = gates.length - 1; i >= 0; i--){
+        const gate = gates[i];
+
+        if(!gate.passed && gate.z <= 0.12){
+          gate.passed = true;
+          const chosen = gate.lanes[player.lane];
+
+          if(chosen.good){
+            combo += 1;
+            if(combo > bestCombo) bestCombo = combo;
+            const gain = 140 + combo * 18;
+            score += gain;
+            flashGood = 1;
+            addParticles(player.x, player.y - 10, chosen.colors[0], chosen.colors[1], 22);
+            addFloatingText(player.x, player.y - 40, "+" + gain, true);
+          } else {
+            flashBad = 1;
+            shake = 16;
+            addParticles(player.x, player.y - 10, chosen.colors[0], chosen.colors[1], 26);
+            endGame();
+            return;
+          }
+        }
+
+        if(gate.z < -0.15){
+          gates.splice(i, 1);
+        }
+      }
+
+      for(let i = particles.length - 1; i >= 0; i--){
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if(p.life <= 0) particles.splice(i, 1);
+      }
+
+      for(let i = floatingTexts.length - 1; i >= 0; i--){
+        const t = floatingTexts[i];
+        t.y -= 1.1;
+        t.life--;
+        if(t.life <= 0) floatingTexts.splice(i, 1);
+      }
+    }
+
+    function lerp(a, b, t){
+      return a + (b - a) * t;
+    }
+
+    function drawBackground(){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0, "#22103a");
+      g.addColorStop(.36, "#140a22");
+      g.addColorStop(.7, "#0a0613");
+      g.addColorStop(1, "#04020a");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      for(const s of stars){
+        const alpha = 0.16 + s.r * 0.12;
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(192,132,252,${alpha * 0.25})`;
+        ctx.fillRect(s.x - 0.5, s.y - 10 * speed * 0.25, 1, 12 * speed * 0.25);
+      }
+
+      const centerX = W / 2;
+      const horizonY = H * 0.18;
+      const floorY = H * 1.02;
+
+      ctx.strokeStyle = "rgba(192,132,252,0.08)";
+      ctx.lineWidth = 1;
+
+      for(let i = -6; i <= 6; i++){
+        const bottomX = centerX + i * (W * 0.11);
+        ctx.beginPath();
+        ctx.moveTo(centerX, horizonY);
+        ctx.lineTo(bottomX, floorY);
+        ctx.stroke();
+      }
+
+      for(let j = 0; j < 12; j++){
+        const t = ((j / 12) + (gameTime * 0.75 * speed) % 1) % 1;
+        const y = lerp(horizonY, floorY, t * t);
+        const alpha = 0.03 + t * 0.08;
+        ctx.strokeStyle = `rgba(192,132,252,${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      if(logo.complete){
+        ctx.save();
+        ctx.globalAlpha = 0.045;
+        const size = 180;
+        ctx.drawImage(logo, centerX - size/2, H*0.38 - size/2, size, size);
+        ctx.restore();
+      }
+
+      if(flashGood > 0.01){
+        ctx.fillStyle = `rgba(78,242,179,${flashGood * 0.08})`;
+        ctx.fillRect(0,0,W,H);
+      }
+      if(flashBad > 0.01){
+        ctx.fillStyle = `rgba(255,85,119,${flashBad * 0.12})`;
+        ctx.fillRect(0,0,W,H);
+      }
+    }
+
+    function gateLaneRect(lane, z){
+      const perspective = 1 - z;
+      const cx = laneX[lane];
+      const y = lerp(H * 0.2, H * 0.76, perspective * perspective);
+      const w = lerp(36, 132, perspective * perspective);
+      const h = lerp(16, 74, perspective * perspective);
+      return { cx, y, w, h };
+    }
+
+    function drawGateRow(gate){
+      for(let i = 0; i < laneCount; i++){
+        const item = gate.lanes[i];
+        const rect = gateLaneRect(i, gate.z);
+        const x = rect.cx - rect.w/2;
+        const y = rect.y - rect.h/2;
+
+        const grad = ctx.createLinearGradient(x, y, x + rect.w, y + rect.h);
+        grad.addColorStop(0, item.colors[0]);
+        grad.addColorStop(1, item.colors[1]);
+
+        ctx.save();
+        ctx.shadowBlur = rect.h * 0.45;
+        ctx.shadowColor = item.colors[0];
+
+        ctx.fillStyle = grad;
+        roundRect(x, y, rect.w, rect.h, Math.min(18, rect.h * 0.32));
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255,255,255,.20)";
+        ctx.lineWidth = Math.max(1, rect.h * 0.04);
+        roundRect(x, y, rect.w, rect.h, Math.min(18, rect.h * 0.32));
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,255,255,.95)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `900 ${Math.max(8, rect.h * 0.26)}px Inter, Arial`;
+        ctx.fillText(item.key, rect.cx, rect.y + 1);
+
+        ctx.restore();
+      }
+    }
+
+    function drawPlayer(){
+      const x = player.x;
+      const y = player.y;
+      const size = player.size + Math.sin(gameTime * 7) * 2;
+
+      ctx.save();
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = "rgba(155,92,255,.48)";
+
+      ctx.fillStyle = "rgba(155,92,255,.15)";
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.64, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(220,190,255,.45)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.58, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(124,58,237,.48)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.48, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if(logo.complete){
+        ctx.drawImage(logo, x - size/2, y - size/2, size, size);
+      } else {
+        ctx.fillStyle = "#c084fc";
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawParticles(){
+      for(const p of particles){
+        const alpha = Math.max(0, p.life / 38);
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+        grad.addColorStop(0, hexToRgba(p.c1, alpha));
+        grad.addColorStop(1, hexToRgba(p.c2, 0));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawFloatingTexts(){
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.font = "900 16px Inter, Arial";
+      for(const t of floatingTexts){
+        const alpha = Math.max(0, t.life / 40);
+        ctx.fillStyle = t.good ? `rgba(255,255,255,${alpha})` : `rgba(255,140,140,${alpha})`;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = t.good ? `rgba(192,132,252,${alpha * 0.5})` : `rgba(255,85,119,${alpha * 0.5})`;
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      ctx.restore();
+    }
+
+    function render(){
+      ctx.save();
+
+      if(shake > 0){
+        const sx = (Math.random() - 0.5) * shake;
+        const sy = (Math.random() - 0.5) * shake;
+        ctx.translate(sx, sy);
+      }
+
+      drawBackground();
+      gates.sort((a, b) => b.z - a.z);
+      for(const gate of gates) drawGateRow(gate);
+      drawPlayer();
+      drawParticles();
+      drawFloatingTexts();
+
+      ctx.restore();
+    }
+
+    function loop(ts){
+      if(!running) return;
+      const dt = Math.min(0.033, (ts - lastTime) / 1000);
+      lastTime = ts;
+
+      update(dt);
+      render();
+
+      if(running) animationId = requestAnimationFrame(loop);
+    }
+
+    function roundRect(x, y, w, h, r){
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function hexToRgba(hex, alpha){
+      const clean = hex.replace("#", "");
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    function moveLeft(){
+      setLane(player.lane - 1);
+    }
+
+    function moveRight(){
+      setLane(player.lane + 1);
+    }
 
     window.addEventListener("keydown", (e) => {
-      if (!running) return;
-      if (e.key === "1") boost("burn");
-      if (e.key === "2") boost("reinvest");
-      if (e.key === "3") boost("treasury");
+      if(!running) return;
+      const key = e.key.toLowerCase();
+      if(key === "arrowleft" || key === "a") moveLeft();
+      if(key === "arrowright" || key === "d") moveRight();
+    });
+
+    canvas.addEventListener("pointerdown", (e) => {
+      if(!running) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if(x < W / 3) setLane(0);
+      else if(x < (W / 3) * 2) setLane(1);
+      else setLane(2);
     });
 
     startBtn.addEventListener("click", startGame);
@@ -825,22 +922,22 @@
 
     copyBtn.addEventListener("click", async () => {
       const status =
-        time >= 35 ? "DOMINANT" :
-        time >= 24 ? "ACTIVE" :
-        time >= 14 ? "STABLE" :
+        score >= 7000 ? "DOMINANT" :
+        score >= 4000 ? "ACTIVE" :
+        score >= 1800 ? "STABLE" :
         "WARM";
 
-      const text = `🟣 I held the reactor as long as I could.
+      const text = `🟣 I survived the ASTY Gate Runner.
 
-Survival: ${time.toFixed(1)}s
-Peak Stability: ${Math.round(peakStability)}%
-Failure Mode: ${failureReason}
+Score: ${Math.floor(score)}
+Best Combo: x${bestCombo}
+Survival: ${gameTime.toFixed(1)}s
 Loop Status: ${status}
 
 $ASTY
 #ArbStrategy #ASTY`;
 
-      try {
+      try{
         await navigator.clipboard.writeText(text);
         copyNote.textContent = "Copied to clipboard.";
       } catch {
@@ -848,7 +945,17 @@ $ASTY
       }
     });
 
+    logo.onerror = () => {
+      console.warn("assets/logo.png not found.");
+    };
+
+    window.addEventListener("resize", () => {
+      computeLanes();
+      player.x = laneX[player.lane];
+    });
+
     resetGame();
+    render();
   </script>
 </body>
 </html>
